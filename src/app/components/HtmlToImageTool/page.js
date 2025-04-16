@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from "react";
-import { toPng } from 'html-to-image';
+import { toCanvas } from 'html-to-image';
 
 export default function HtmlToImageTool() {
   const [markupUpperText, setMarkupUpperText] = useState(``);
@@ -101,7 +101,7 @@ export default function HtmlToImageTool() {
   // スケールファクター
   const scaleFactor = 360/baseWidth;
   
-  // HTML要素から画像を生成して保存
+  // HTML要素から画像を生成して保存 - Canvas APIを直接使用する方法
   const saveAsImage = async () => {
     if (!textContainerRef.current || isProcessing) return;
     
@@ -112,20 +112,15 @@ export default function HtmlToImageTool() {
       const now = new Date();
       const timestamp = `${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}_${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}${now.getSeconds().toString().padStart(2, '0')}`;
       
-      // HTML要素からPNG画像データを生成
-      const dataUrl = await toPng(textContainerRef.current, {
+      // HTML要素からCanvas要素を作成
+      const canvas = await toCanvas(textContainerRef.current, {
         backgroundColor: null, // 透明な背景
         width: 1080,
-        height: 1920,
-        canvasWidth: 1080,
-        canvasHeight: 1920,
-        pixelRatio: 1,
-        skipAutoScale: true,
-        style: {
-          transform: 'scale(3)', // スケールを調整
-          transformOrigin: 'top left'
-        }
+        height: 1920
       });
+      
+      // Canvas要素からデータURLを生成
+      const dataUrl = canvas.toDataURL('image/png');
       
       // ダウンロードリンク作成
       const link = document.createElement('a');
@@ -135,7 +130,7 @@ export default function HtmlToImageTool() {
       
     } catch (error) {
       console.error("画像の保存に失敗しました:", error);
-      alert("画像の保存に失敗しました: " + (error?.message || "不明なエラー"));
+      alert("画像の保存に失敗しました: " + (error ? error.toString() : "不明なエラー"));
     } finally {
       setIsProcessing(false);
     }
