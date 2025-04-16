@@ -100,7 +100,7 @@ export default function HtmlToImageTool() {
   // スケールファクター
   const scaleFactor = 360/baseWidth;
   
-  // HTML要素から画像を生成して保存 - 直接DOM APIを使用
+  // HTML要素から画像を生成して保存 - 直接Canvas APIを使用
   const saveAsImage = async () => {
     if (!textContainerRef.current || isProcessing) return;
     
@@ -245,7 +245,7 @@ export default function HtmlToImageTool() {
               whiteSpace: 'pre-line', // 明示的な改行のみを反映
               zIndex: 1
             }}
-            dangerouslySetInnerHTML={{ __html: upperHtml }}
+            dangerouslySetInnerHTML={{ __html: bottomHtml }}
           />
         </div>
         
