@@ -1,36 +1,81 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# TextRender - テキスト画像生成ツール
 
-## Getting Started
+## 概要
+TextRenderは、カスタマイズされたテキスト付き画像を簡単に生成できるNextjsベースのウェブアプリケーションです。特にショート動画用のテキストオーバーレイ作成に最適化されています。
 
-First, run the development server:
+## 主な機能
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+### 1. カラータグ付きテキスト入力
+- `<red>赤色テキスト</red>`, `<blue>青色テキスト</blue>` などのシンプルなタグ構文でテキスト色を指定可能
+- 対応色: red, orange, yellow, green, blue, purple, white, black
+- 複数色を一つのテキスト内で組み合わせ可能
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. 2段テキスト構造
+- 上部テキスト: 画面上部に表示されるメインメッセージ
+- 下部テキスト: 画面下部に表示される補足情報やタグライン
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+### 3. 透明背景での画像生成
+- **重要**: プレビュー画面の中央緑色部分は実際の出力には含まれません
+- 出力されるのはテキスト部分のみで、透明背景付きのPNG画像として生成
+- これにより動画編集ソフトで実際の映像/画像の上にテキストを重ねるワークフローに最適化
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 4. 詳細カスタマイズオプション
+- フォント選択: 7種類の日本語対応フォント（ヒラギノ角ゴ、サンセリフ、セリフ、等幅、ラノベPOP、游字様、ランパートワン）
+- フォントサイズ調整: 0.5倍〜5.0倍のスケーリング
+- 行間設定: 1.0〜2.5までのラインハイト調整
+- テキスト位置調整: 上部・下部テキストの表示位置を細かく制御可能
+- フォントウェイト: 細字から太字まで9段階の太さ調整
 
-## Learn More
+## 使用方法
 
-To learn more about Next.js, take a look at the following resources:
+1. **テキスト入力**
+   - 上部・下部テキストボックスにそれぞれ表示したいテキストを入力
+   - カラータグで色付けしたい部分を `<色名>テキスト</色名>` の形式で囲む
+   - 改行はそのまま反映されます
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+2. **詳細設定の調整**
+   - 「詳細設定を開く」ボタンをクリックして拡張設定パネルを表示
+   - スライダーでテキストサイズや位置、行間などを調整
+   - 設定変更はリアルタイムでプレビューに反映
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+3. **画像として保存**
+   - 設定が完了したら「画像として保存」ボタンをクリック
+   - PNG形式の画像ファイルが自動的にダウンロードされます（タイムスタンプ付きファイル名）
 
-## Deploy on Vercel
+## 実際のワークフロー
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### 動画制作での使用方法
+1. TextRenderでテキストを作成・調整
+2. 「画像として保存」でテキストレイヤーをエクスポート（透明背景PNG）
+3. 動画編集ソフト（Premiere Pro, Final Cut, DaVinci Resolveなど）で実際の映像に重ねる
+4. 必要に応じてテキストにアニメーションや効果を追加
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### プレビュー画面の緑色部分について
+- プレビュー画面の中央緑色領域は、実際の映像/画像が配置される場所を視覚的に示す**プレースホルダー**です
+- この部分は実際の出力には含まれず、テキスト配置の参考としてのみ表示されています
+- 目に優しい薄い緑色を使用することで、長時間の編集作業による眼精疲労を軽減
+
+## 技術仕様
+
+- 出力解像度: 1080×1920 ピクセル（9:16アスペクト比、縦長スマートフォン用）
+- ファイル形式: PNG（透明背景対応）
+- レンダリングエンジン: HTML Canvas API
+- フロントエンド: Next.js + React
+
+## 利用シーン
+
+- YouTubeショート動画のテキストオーバーレイ作成
+- Instagram/TikTokストーリーのタイトル画像生成
+- SNS投稿用のテキスト画像作成
+- バイク・アウトドア関連のコンテンツ制作
+
+## 将来の拡張予定
+
+- テンプレート保存と再利用機能
+- さらなるフォントとデザインオプションの追加
+- バッチ処理による複数画像の一括生成
+- APIによる自動テキスト生成との統合
+
+---
+
+このツールは動画制作ワークフローを効率化し、一貫性のあるブランディングと視覚的に魅力的なコンテンツ作成をサポートします。特にバイク関連のアウトドアコンテンツ制作に最適化されています。
