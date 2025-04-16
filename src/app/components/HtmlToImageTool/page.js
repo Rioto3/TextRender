@@ -14,7 +14,7 @@ export default function HtmlToImageTool() {
   const [fontWeight, setFontWeight] = useState(400);
   const [lineHeight, setLineHeight] = useState(1.4); // 行間の比率を追加
   const [upperTextTop, setUpperTextTop] = useState(60); // 上部テキストの位置
-  const [bottomTextBottom, setBottomTextBottom] = useState(220); // 下部テキストの位置
+  const [bottomTextBottom, setBottomTextBottom] = useState(180); // 下部テキストの位置
   const [isProcessing, setIsProcessing] = useState(false);
   const previewRef = useRef(null);
   const textContainerRef = useRef(null); // テキスト要素のみを含むコンテナへの参照
