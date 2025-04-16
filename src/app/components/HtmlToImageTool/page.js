@@ -1,13 +1,14 @@
 'use client';
 
 import { useState, useRef, useEffect } from "react";
+import { toBlob } from 'html-to-image';
 
 export default function HtmlToImageTool() {
   const [markupUpperText, setMarkupUpperText] = useState(``);
   const [markupBottomText, setMarkupBottomText] = useState(``);
 
   // 状態変数に設定パネル表示フラグを追加
-const [showSettings, setShowSettings] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [textRate, setTextRate] = useState(3.3);
   const [selectedFont, setSelectedFont] = useState("lanobe-pop");
   const [fontWeight, setFontWeight] = useState(400);
@@ -16,6 +17,7 @@ const [showSettings, setShowSettings] = useState(false);
   const [bottomTextBottom, setBottomTextBottom] = useState(220); // 下部テキストの位置
   const [isProcessing, setIsProcessing] = useState(false);
   const previewRef = useRef(null);
+  const textContainerRef = useRef(null); // テキスト要素のみを含むコンテナへの参照
   
   // 利用可能なフォントリスト
   const availableFonts = [
@@ -92,72 +94,37 @@ const [showSettings, setShowSettings] = useState(false);
   const baseWidth = 1080;
   const baseHeight = 1920;
   
-  // 赤領域の絶対座標と大きさ
+  // 緑領域の絶対座標と大きさ
   const redAreaTop = 500;
   const redAreaHeight = 680;
   
   // スケールファクター
   const scaleFactor = 360/baseWidth;
   
-  // APIを呼び出して画像を生成・保存
-  // APIを呼び出して画像を生成・保存
-const saveAsImage = async () => {
-  if (!previewRef.current || isProcessing) return;
-  
-  setIsProcessing(true);
-  
-  try {
-    // タイムスタンプ生成
-    const now = new Date();
-    const timestamp = `${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}_${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}${now.getSeconds().toString().padStart(2, '0')}`;
+  // HTML要素から画像を生成して保存
+  const saveAsImage = async () => {
+    if (!textContainerRef.current || isProcessing) return;
     
-    // スタイル情報を含めたデータを準備
-    const requestData = {
-      upperText: markupUpperText,
-      bottomText: markupBottomText,
-      timestamp: timestamp,
-      colorMap: colorMap,
-      selectedFont: selectedFont,
-      fontWeight: fontWeight,
-      styles: {
-        // 基本レイアウト情報
-        width: 360,
-        height: 640,
-        // 出力サイズ (9:16のアスペクト比)
-        outputWidth: 1080,
-        outputHeight: 1920,
-        // テキスト位置
-        upperTextTop: upperTextTop,
-        bottomTextBottom: bottomTextBottom,
-        // テキストスタイル
-        fontSize: 24 * scaleFactor * textRate,
-        fontFamily: selectedFont,
-        fontWeight: fontWeight,
-        lineHeight: lineHeight,
-        // 赤エリア情報（必要に応じて）
-        redAreaTop: redAreaTop * scaleFactor,
-        redAreaHeight: redAreaHeight * scaleFactor
-      }
-    };
+    setIsProcessing(true);
+    
+    try {
+      // タイムスタンプ生成
+      const now = new Date();
+      const timestamp = `${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}_${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}${now.getSeconds().toString().padStart(2, '0')}`;
       
-      // APIエンドポイントを呼び出し
-      const response = await fetch('/api/generate-image', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestData),
+      // テキスト要素のみを含むコンテナからBlobを生成
+      const blob = await toBlob(textContainerRef.current, {
+        backgroundColor: null, // 透明な背景
+        width: 1080,
+        height: 1920
       });
       
-      if (!response.ok) {
-        throw new Error(`APIエラー: ${response.status}`);
+      if (!blob) {
+        throw new Error("画像の生成に失敗しました");
       }
       
-      // レスポンスが画像データ(Blob)
-      const imageBlob = await response.blob();
-      
       // Blobオブジェクトから一時的なURLを作成
-      const imageUrl = URL.createObjectURL(imageBlob);
+      const imageUrl = URL.createObjectURL(blob);
       
       // ダウンロードリンク作成
       const link = document.createElement('a');
@@ -178,11 +145,6 @@ const saveAsImage = async () => {
     }
   };
   
-
-
-
-
-
   // モバイルエリアコンポーネント
   const MobilArea = ({ textRate = 1 }) => {
     return (
@@ -194,39 +156,68 @@ const saveAsImage = async () => {
         ref={previewRef}
         id="preview-container"
       >
-        {/* 上部テキスト - 絶対配置 */}
-        <div
-          className="text-center upper-text"
-          style={{
-            position: "absolute",
-            top: `${upperTextTop}px`,
-            left: "0",
-            width: "100%",
-            padding: '0',
-            fontSize: `${24 * scaleFactor * textRate}px`,
-            lineHeight: lineHeight,
-            fontFamily: selectedFont,
-            fontWeight: fontWeight,
-            whiteSpace: 'pre-wrap',
-            zIndex: 1
-          }}
-          dangerouslySetInnerHTML={{ __html: upperHtml }}
-        />
-        
-        {/* 中央の赤帯を目に優しい薄い緑色に変更 */}
+        {/* テキスト要素のみを含むコンテナ（透明背景） */}
         <div 
-          className="red-area"
+          ref={textContainerRef}
+          className="absolute top-0 left-0 w-full h-full"
+          style={{
+            backgroundColor: "transparent",
+            overflow: "hidden"
+          }}
+        >
+          {/* 上部テキスト - 絶対配置 */}
+          <div
+            className="text-center upper-text"
+            style={{
+              position: "absolute",
+              top: `${upperTextTop}px`,
+              left: "0",
+              width: "100%",
+              padding: '0',
+              fontSize: `${24 * scaleFactor * textRate}px`,
+              lineHeight: lineHeight,
+              fontFamily: selectedFont,
+              fontWeight: fontWeight,
+              whiteSpace: 'pre-line', // 明示的な改行のみを反映
+              zIndex: 1
+            }}
+            dangerouslySetInnerHTML={{ __html: upperHtml }}
+          />
+          
+          {/* 下部テキスト - 絶対配置 */}
+          <div
+            className="text-center bottom-text"
+            style={{
+              position: "absolute",
+              bottom: `${bottomTextBottom}px`,
+              left: "0",
+              width: "100%",
+              padding: '0',
+              fontSize: `${24 * scaleFactor * textRate}px`,
+              lineHeight: lineHeight,
+              fontFamily: selectedFont,
+              fontWeight: fontWeight,
+              whiteSpace: 'pre-line', // 明示的な改行のみを反映
+              zIndex: 1
+            }}
+            dangerouslySetInnerHTML={{ __html: bottomHtml }}
+          />
+        </div>
+        
+        {/* 中央の緑帯 - プレビュー用（テキストコンテナの外に配置） */}
+        <div 
+          className="green-area"
           style={{
             position: 'absolute',
             top: `${redAreaTop * scaleFactor}px`,
             left: "0",
             width: "100%",
             height: `${redAreaHeight * scaleFactor}px`,
-            backgroundColor: '#90EE90', // 'red'から'#90EE90'（light green）に変更
+            backgroundColor: '#90EE90', // 薄い緑色
             zIndex: 0
           }} 
         >
-          {/* 領域の中央に仮のテキスト */}
+          {/* 緑領域の中央に仮のテキスト */}
           <div
             style={{
               position: 'absolute',
@@ -241,33 +232,14 @@ const saveAsImage = async () => {
             ここに画像が入ります
           </div>
         </div>
-        
-        {/* 下部テキスト - 絶対配置 */}
-        <div
-          className="text-center bottom-text"
-          style={{
-            position: "absolute",
-            bottom: `${bottomTextBottom}px`,
-            left: "0",
-            width: "100%",
-            padding: '0',
-            fontSize: `${24 * scaleFactor * textRate}px`,
-            lineHeight: lineHeight,
-            fontFamily: selectedFont,
-            fontWeight: fontWeight,
-            whiteSpace: 'pre-wrap',
-            zIndex: 1
-          }}
-          dangerouslySetInnerHTML={{ __html: bottomHtml }}
-        />
       </div>
     );
   };
 
   // 設定パネル表示切り替え関数
-const toggleSettings = () => {
-  setShowSettings(!showSettings);
-};
+  const toggleSettings = () => {
+    setShowSettings(!showSettings);
+  };
   
   return (
     <div className="flex flex-row gap-4 p-4">
