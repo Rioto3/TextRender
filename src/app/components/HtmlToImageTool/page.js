@@ -14,7 +14,7 @@ export default function HtmlToImageTool() {
   const [fontWeight, setFontWeight] = useState(400);
   const [lineHeight, setLineHeight] = useState(1.4); // 行間の比率を追加
   const [upperTextTop, setUpperTextTop] = useState(60); // 上部テキストの位置
-  const [bottomTextBottom, setBottomTextBottom] = useState(180); // 下部テキストの位置
+  const [bottomTextBottom, setBottomTextBottom] = useState(225); // 下部テキストの位置
   const [isProcessing, setIsProcessing] = useState(false);
   const previewRef = useRef(null);
   const textContainerRef = useRef(null); // テキスト要素のみを含むコンテナへの参照
@@ -137,12 +137,14 @@ export default function HtmlToImageTool() {
       
       // 下部テキスト要素のフォントサイズを調整
       const bottomTextClone = clone.querySelector('.bottom-text');
-      if (bottomTextClone) {
-        const originalSize = parseInt(getComputedStyle(textContainerRef.current.querySelector('.bottom-text')).fontSize);
-        const scaledSize = originalSize * (baseWidth / 360); // プレビューから出力サイズへのスケール
-        bottomTextClone.style.fontSize = `${scaledSize}px`;
-        bottomTextClone.style.bottom = `${bottomTextBottom * (baseWidth / 360)}px`;
-      }
+       if (bottomTextClone) {
+      const originalSize = parseInt(getComputedStyle(textContainerRef.current.querySelector('.bottom-text')).fontSize);
+      const scaledSize = originalSize * (baseWidth / 360); // プレビューから出力サイズへのスケール
+      bottomTextClone.style.fontSize = `${scaledSize}px`;
+      
+      // bottom から top への変更
+      bottomTextClone.style.top = `calc(100% - ${bottomTextBottom * (baseWidth / 360)}px)`;
+    }
       
       // クローンを一時コンテナに追加
       tempContainer.appendChild(clone);
@@ -223,7 +225,7 @@ export default function HtmlToImageTool() {
             className="text-center bottom-text"
             style={{
               position: "absolute",
-              bottom: `${bottomTextBottom}px`,
+              top: `calc(100% - ${bottomTextBottom}px)`, 
               left: "0",
               width: "100%",
               padding: '0',
