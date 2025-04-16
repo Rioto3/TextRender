@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useRef, useEffect } from "react";
-import { toCanvas } from 'html-to-image';
 
 export default function HtmlToImageTool() {
   const [markupUpperText, setMarkupUpperText] = useState(``);
@@ -101,7 +100,7 @@ export default function HtmlToImageTool() {
   // スケールファクター
   const scaleFactor = 360/baseWidth;
   
-  // HTML要素から画像を生成して保存 - Canvas APIを直接使用する方法
+  // HTML要素から画像を生成して保存 - 直接DOM APIを使用
   const saveAsImage = async () => {
     if (!textContainerRef.current || isProcessing) return;
     
@@ -112,12 +111,67 @@ export default function HtmlToImageTool() {
       const now = new Date();
       const timestamp = `${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}_${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}${now.getSeconds().toString().padStart(2, '0')}`;
       
-      // HTML要素からCanvas要素を作成
-      const canvas = await toCanvas(textContainerRef.current, {
-        backgroundColor: null, // 透明な背景
-        width: 1080,
-        height: 1920
-      });
+      // 出力サイズ設定
+      const outputWidth = 1080;
+      const outputHeight = 1920;
+      
+      // キャンバス要素を作成
+      const canvas = document.createElement('canvas');
+      canvas.width = outputWidth;
+      canvas.height = outputHeight;
+      const ctx = canvas.getContext('2d');
+      
+      // 背景を透明に設定
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // 上部テキストと下部テキストの文字列をHTML形式で取得
+      const upperTextElement = textContainerRef.current.querySelector('.upper-text');
+      const bottomTextElement = textContainerRef.current.querySelector('.bottom-text');
+      
+      // 上部テキストを描画
+      if (upperTextElement) {
+        const outputUpperTop = (upperTextTop * outputWidth) / 360;
+        
+        // フォント設定
+        ctx.font = `${fontWeight} ${(24 * scaleFactor * textRate * outputWidth) / 360}px ${selectedFont}, sans-serif`;
+        ctx.textBaseline = 'top';
+        ctx.textAlign = 'center';
+        
+        // テキストを中央揃えで行ごとに描画
+        const upperText = upperTextElement.innerText || '';
+        const lines = upperText.split("\n");
+        
+        let currentY = outputUpperTop;
+        lines.forEach((line) => {
+          // 色付きテキスト対応のため一旦黒で描画（後で対応）
+          ctx.fillStyle = '#000000';
+          ctx.fillText(line, outputWidth / 2, currentY);
+          currentY += (24 * scaleFactor * textRate * lineHeight * outputWidth) / 360;
+        });
+      }
+      
+      // 下部テキストを描画
+      if (bottomTextElement) {
+        const outputBottomBottom = (bottomTextBottom * outputWidth) / 360;
+        
+        // フォント設定
+        ctx.font = `${fontWeight} ${(24 * scaleFactor * textRate * outputWidth) / 360}px ${selectedFont}, sans-serif`;
+        ctx.textBaseline = 'bottom';
+        ctx.textAlign = 'center';
+        
+        // テキストを中央揃えで行ごとに描画
+        const bottomText = bottomTextElement.innerText || '';
+        const lines = bottomText.split("\n");
+        
+        let currentY = outputHeight - outputBottomBottom;
+        // ボトムテキストは下から上に配置
+        for (let i = lines.length - 1; i >= 0; i--) {
+          // 色付きテキスト対応のため一旦黒で描画（後で対応）
+          ctx.fillStyle = '#000000';
+          ctx.fillText(lines[i], outputWidth / 2, currentY);
+          currentY -= (24 * scaleFactor * textRate * lineHeight * outputWidth) / 360;
+        }
+      }
       
       // Canvas要素からデータURLを生成
       const dataUrl = canvas.toDataURL('image/png');
@@ -191,7 +245,7 @@ export default function HtmlToImageTool() {
               whiteSpace: 'pre-line', // 明示的な改行のみを反映
               zIndex: 1
             }}
-            dangerouslySetInnerHTML={{ __html: bottomHtml }}
+            dangerouslySetInnerHTML={{ __html: upperHtml }}
           />
         </div>
         
