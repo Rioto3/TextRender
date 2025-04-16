@@ -137,12 +137,14 @@ export default function HtmlToImageTool() {
       
       // 下部テキスト要素のフォントサイズを調整
       const bottomTextClone = clone.querySelector('.bottom-text');
-      if (bottomTextClone) {
-        const originalSize = parseInt(getComputedStyle(textContainerRef.current.querySelector('.bottom-text')).fontSize);
-        const scaledSize = originalSize * (baseWidth / 360); // プレビューから出力サイズへのスケール
-        bottomTextClone.style.fontSize = `${scaledSize}px`;
-        bottomTextClone.style.bottom = `${bottomTextBottom * (baseWidth / 360)}px`;
-      }
+       if (bottomTextClone) {
+      const originalSize = parseInt(getComputedStyle(textContainerRef.current.querySelector('.bottom-text')).fontSize);
+      const scaledSize = originalSize * (baseWidth / 360); // プレビューから出力サイズへのスケール
+      bottomTextClone.style.fontSize = `${scaledSize}px`;
+      
+      // bottom から top への変更
+      bottomTextClone.style.top = `calc(100% - ${bottomTextBottom * (baseWidth / 360)}px)`;
+    }
       
       // クローンを一時コンテナに追加
       tempContainer.appendChild(clone);
@@ -223,7 +225,7 @@ export default function HtmlToImageTool() {
             className="text-center bottom-text"
             style={{
               position: "absolute",
-              bottom: `${bottomTextBottom}px`,
+              top: `calc(100% - ${bottomTextBottom}px)`, 
               left: "0",
               width: "100%",
               padding: '0',
