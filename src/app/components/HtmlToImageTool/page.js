@@ -213,7 +213,7 @@ const saveAsImage = async () => {
           dangerouslySetInnerHTML={{ __html: upperHtml }}
         />
         
-        {/* 中央の赤帯 */}
+        {/* 中央の赤帯を目に優しい薄い緑色に変更 */}
         <div 
           className="red-area"
           style={{
@@ -222,11 +222,11 @@ const saveAsImage = async () => {
             left: "0",
             width: "100%",
             height: `${redAreaHeight * scaleFactor}px`,
-            backgroundColor: 'red',
+            backgroundColor: '#90EE90', // 'red'から'#90EE90'（light green）に変更
             zIndex: 0
           }} 
         >
-          {/* 赤い領域の中央に仮のテキスト */}
+          {/* 領域の中央に仮のテキスト */}
           <div
             style={{
               position: 'absolute',
