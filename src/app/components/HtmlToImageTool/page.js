@@ -112,27 +112,54 @@ export default function HtmlToImageTool() {
       const now = new Date();
       const timestamp = `${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}_${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}${now.getSeconds().toString().padStart(2, '0')}`;
       
-      // 出力サイズ設定
-      const outputWidth = 1080;
-      const outputHeight = 1920;
+      // 一時的なコンテナを作成（スケーリングとフォントサイズ調整用）
+      const tempContainer = document.createElement('div');
+      tempContainer.style.position = 'absolute';
+      tempContainer.style.top = '-9999px';
+      tempContainer.style.left = '-9999px';
+      tempContainer.style.width = `${baseWidth}px`; // 出力サイズと同じ幅
+      tempContainer.style.height = `${baseHeight}px`; // 出力サイズと同じ高さ
+      tempContainer.style.backgroundColor = 'transparent';
+      
+      // テキストコンテナのクローンを作成
+      const clone = textContainerRef.current.cloneNode(true);
+      clone.style.width = '100%';
+      clone.style.height = '100%';
+      
+      // 上部テキスト要素のフォントサイズを調整
+      const upperTextClone = clone.querySelector('.upper-text');
+      if (upperTextClone) {
+        const originalSize = parseInt(getComputedStyle(textContainerRef.current.querySelector('.upper-text')).fontSize);
+        const scaledSize = originalSize * (baseWidth / 360); // プレビューから出力サイズへのスケール
+        upperTextClone.style.fontSize = `${scaledSize}px`;
+        upperTextClone.style.top = `${upperTextTop * (baseWidth / 360)}px`;
+      }
+      
+      // 下部テキスト要素のフォントサイズを調整
+      const bottomTextClone = clone.querySelector('.bottom-text');
+      if (bottomTextClone) {
+        const originalSize = parseInt(getComputedStyle(textContainerRef.current.querySelector('.bottom-text')).fontSize);
+        const scaledSize = originalSize * (baseWidth / 360); // プレビューから出力サイズへのスケール
+        bottomTextClone.style.fontSize = `${scaledSize}px`;
+        bottomTextClone.style.bottom = `${bottomTextBottom * (baseWidth / 360)}px`;
+      }
+      
+      // クローンを一時コンテナに追加
+      tempContainer.appendChild(clone);
+      document.body.appendChild(tempContainer);
       
       // html2canvasを使用してHTML要素をキャンバスに変換
-      const canvas = await html2canvas(textContainerRef.current, {
+      const canvas = await html2canvas(tempContainer, {
         backgroundColor: null, // 透明な背景
-        width: outputWidth,
-        height: outputHeight,
-        scale: 3, // 高解像度用のスケーリング
+        width: baseWidth,
+        height: baseHeight,
+        scale: 1, // スケールは1に設定（既に適切なサイズにスケーリング済み）
         useCORS: true, // 外部リソースの読み込み許可
-        logging: false, // ログ出力を無効化
-        onclone: (clonedDoc) => {
-          // クローンされたDOM要素のスタイル調整
-          const clonedContainer = clonedDoc.querySelector('#text-container');
-          if (clonedContainer) {
-            clonedContainer.style.width = `${outputWidth}px`;
-            clonedContainer.style.height = `${outputHeight}px`;
-          }
-        }
+        logging: false // ログ出力を無効化
       });
+      
+      // 一時コンテナを削除
+      document.body.removeChild(tempContainer);
       
       // Canvas要素からデータURLを生成
       const dataUrl = canvas.toDataURL('image/png');
