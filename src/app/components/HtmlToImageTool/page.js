@@ -9,7 +9,7 @@ export default function HtmlToImageTool() {
   // 状態変数に設定パネル表示フラグを追加
 const [showSettings, setShowSettings] = useState(false);
   const [textRate, setTextRate] = useState(3.3);
-  const [selectedFont, setSelectedFont] = useState("hiragino");
+  const [selectedFont, setSelectedFont] = useState("lanobe-pop");
   const [fontWeight, setFontWeight] = useState(400);
   const [lineHeight, setLineHeight] = useState(1.4); // 行間の比率を追加
   const [upperTextTop, setUpperTextTop] = useState(60); // 上部テキストの位置
