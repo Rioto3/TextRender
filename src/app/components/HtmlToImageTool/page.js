@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from "react";
+import html2canvas from 'html2canvas';
 
 export default function HtmlToImageTool() {
   const [markupUpperText, setMarkupUpperText] = useState(``);
@@ -100,7 +101,7 @@ export default function HtmlToImageTool() {
   // スケールファクター
   const scaleFactor = 360/baseWidth;
   
-  // HTML要素から画像を生成して保存 - 直接Canvas APIを使用
+  // HTML要素から画像を生成して保存 - html2canvasライブラリを使用
   const saveAsImage = async () => {
     if (!textContainerRef.current || isProcessing) return;
     
@@ -115,63 +116,23 @@ export default function HtmlToImageTool() {
       const outputWidth = 1080;
       const outputHeight = 1920;
       
-      // キャンバス要素を作成
-      const canvas = document.createElement('canvas');
-      canvas.width = outputWidth;
-      canvas.height = outputHeight;
-      const ctx = canvas.getContext('2d');
-      
-      // 背景を透明に設定
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
-      // 上部テキストと下部テキストの文字列をHTML形式で取得
-      const upperTextElement = textContainerRef.current.querySelector('.upper-text');
-      const bottomTextElement = textContainerRef.current.querySelector('.bottom-text');
-      
-      // 上部テキストを描画
-      if (upperTextElement) {
-        const outputUpperTop = (upperTextTop * outputWidth) / 360;
-        
-        // フォント設定
-        ctx.font = `${fontWeight} ${(24 * scaleFactor * textRate * outputWidth) / 360}px ${selectedFont}, sans-serif`;
-        ctx.textBaseline = 'top';
-        ctx.textAlign = 'center';
-        
-        // テキストを中央揃えで行ごとに描画
-        const upperText = upperTextElement.innerText || '';
-        const lines = upperText.split("\n");
-        
-        let currentY = outputUpperTop;
-        lines.forEach((line) => {
-          // 色付きテキスト対応のため一旦黒で描画（後で対応）
-          ctx.fillStyle = '#000000';
-          ctx.fillText(line, outputWidth / 2, currentY);
-          currentY += (24 * scaleFactor * textRate * lineHeight * outputWidth) / 360;
-        });
-      }
-      
-      // 下部テキストを描画
-      if (bottomTextElement) {
-        const outputBottomBottom = (bottomTextBottom * outputWidth) / 360;
-        
-        // フォント設定
-        ctx.font = `${fontWeight} ${(24 * scaleFactor * textRate * outputWidth) / 360}px ${selectedFont}, sans-serif`;
-        ctx.textBaseline = 'bottom';
-        ctx.textAlign = 'center';
-        
-        // テキストを中央揃えで行ごとに描画
-        const bottomText = bottomTextElement.innerText || '';
-        const lines = bottomText.split("\n");
-        
-        let currentY = outputHeight - outputBottomBottom;
-        // ボトムテキストは下から上に配置
-        for (let i = lines.length - 1; i >= 0; i--) {
-          // 色付きテキスト対応のため一旦黒で描画（後で対応）
-          ctx.fillStyle = '#000000';
-          ctx.fillText(lines[i], outputWidth / 2, currentY);
-          currentY -= (24 * scaleFactor * textRate * lineHeight * outputWidth) / 360;
+      // html2canvasを使用してHTML要素をキャンバスに変換
+      const canvas = await html2canvas(textContainerRef.current, {
+        backgroundColor: null, // 透明な背景
+        width: outputWidth,
+        height: outputHeight,
+        scale: 3, // 高解像度用のスケーリング
+        useCORS: true, // 外部リソースの読み込み許可
+        logging: false, // ログ出力を無効化
+        onclone: (clonedDoc) => {
+          // クローンされたDOM要素のスタイル調整
+          const clonedContainer = clonedDoc.querySelector('#text-container');
+          if (clonedContainer) {
+            clonedContainer.style.width = `${outputWidth}px`;
+            clonedContainer.style.height = `${outputHeight}px`;
+          }
         }
-      }
+      });
       
       // Canvas要素からデータURLを生成
       const dataUrl = canvas.toDataURL('image/png');
@@ -209,6 +170,7 @@ export default function HtmlToImageTool() {
             backgroundColor: "transparent",
             overflow: "hidden"
           }}
+          id="text-container"
         >
           {/* 上部テキスト - 絶対配置 */}
           <div
