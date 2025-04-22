@@ -175,20 +175,17 @@ export default function HtmlToImageTool() {
   // HTML生成用の関数
 // ダークモード対応のHTML生成関数
 const convertSimpleMarkupToHtml = (text, darkMode = false) => {
-  let result = text;
-  
-  // タグ付きテキストの処理
-  result = result.replace(/<([a-z]+)>(.*?)<\/\1>/g, (match, color, content) => {
-    // ダークモードの場合の色変換
+  return text.replace(/<([a-z]+)>(.*?)<\/\1>/g, (match, color, content) => {
     let htmlColor;
+    
+    // ダークモードでの色変換
     if (darkMode) {
-      // ダークモードでの色変換ルール
       if (color.toLowerCase() === 'white') {
         htmlColor = "#000000"; // white → black
       } else if (color.toLowerCase() === 'black') {
         htmlColor = "#ffffff"; // black → white
       } else {
-        htmlColor = colorMap[color.toLowerCase()] || "#ffffff"; // その他のタグはそのまま、未定義なら白
+        htmlColor = colorMap[color.toLowerCase()] || "#ffffff";
       }
     } else {
       // 通常モード
@@ -196,45 +193,9 @@ const convertSimpleMarkupToHtml = (text, darkMode = false) => {
     }
     
     return `<span style="color:${htmlColor}">${content}</span>`;
-  });
-  
-  // 改行の処理
-  result = result.replace(/\n/g, "<br>");
-  
-  // ダークモードでタグのないテキストも白色に変更
-  if (darkMode) {
-    // タグのないテキストを特定してspanで囲む（既にspanで囲まれたテキストを除外）
-    // 正規表現で「spanタグの間にないテキスト」を検出して白色spanで囲む
-    const wrapper = document.createElement('div');
-    wrapper.innerHTML = result;
-    
-    // テキストノードを探して処理
-    const textNodes = [];
-    const findTextNodes = (node) => {
-      if (node.nodeType === Node.TEXT_NODE && node.textContent.trim()) {
-        textNodes.push(node);
-      } else if (node.nodeType === Node.ELEMENT_NODE) {
-        for (const child of node.childNodes) {
-          findTextNodes(child);
-        }
-      }
-    };
-    
-    findTextNodes(wrapper);
-    
-    // テキストノードを白色spanで置換
-    for (const textNode of textNodes) {
-      const span = document.createElement('span');
-      span.style.color = '#ffffff';
-      span.textContent = textNode.textContent;
-      textNode.parentNode.replaceChild(span, textNode);
-    }
-    
-    result = wrapper.innerHTML;
-  }
-  
-  return result;
+  }).replace(/\n/g, "<br>");
 };
+
 
 
   
@@ -300,127 +261,136 @@ const convertSimpleMarkupToHtml = (text, darkMode = false) => {
     }
   };
   
-  // HTML要素から画像を生成して保存 - html2canvasライブラリを使用
-// HTML要素から画像を生成して保存 - html2canvasライブラリを使用
-const saveAsImage = async (darkMode = false) => {
-  if (!textContainerRef.current || isProcessing) return;
-  
-  setIsProcessing(true);
-  
-  try {
-    // タイムスタンプ生成
-    const now = new Date();
-    const timestamp = `${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}_${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}${now.getSeconds().toString().padStart(2, '0')}`;
+  const saveAsImage = async (darkMode = false) => {
+    if (!textContainerRef.current || isProcessing) return;
     
-    // 一時的なコンテナを作成（スケーリングとフォントサイズ調整用）
-    const tempContainer = document.createElement('div');
-    tempContainer.style.position = 'absolute';
-    tempContainer.style.top = '-9999px';
-    tempContainer.style.left = '-9999px';
-    tempContainer.style.width = `${baseWidth}px`; // 出力サイズと同じ幅
-    tempContainer.style.height = `${baseHeight}px`; // 出力サイズと同じ高さ
-    tempContainer.style.backgroundColor = darkMode ? '#121212' : '#FFFAFA'; // ダークモードか通常モードの背景色
+    setIsProcessing(true);
     
-    // 背景画像の追加（もし存在すれば）
-    if (backgroundImage) {
-      const imgContainer = document.createElement('div');
-      imgContainer.style.position = 'absolute';
-      imgContainer.style.top = `${redAreaTop}px`;
-      imgContainer.style.left = '0';
-      imgContainer.style.width = '100%';
-      imgContainer.style.height = `${redAreaHeight}px`;
-      imgContainer.style.overflow = 'hidden';
+    try {
+      // タイムスタンプ生成
+      const now = new Date();
+      const timestamp = `${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}_${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}${now.getSeconds().toString().padStart(2, '0')}`;
       
-      const img = document.createElement('img');
-      img.src = backgroundImage;
-      img.style.width = '100%';
-      img.style.height = '100%';
-      img.style.objectFit = 'cover';
-      img.style.objectPosition = 'center';
+      // 一時的なコンテナを作成（スケーリングとフォントサイズ調整用）
+      const tempContainer = document.createElement('div');
+      tempContainer.style.position = 'absolute';
+      tempContainer.style.top = '-9999px';
+      tempContainer.style.left = '-9999px';
+      tempContainer.style.width = `${baseWidth}px`; // 出力サイズと同じ幅
+      tempContainer.style.height = `${baseHeight}px`; // 出力サイズと同じ高さ
+      tempContainer.style.backgroundColor = darkMode ? '#121212' : '#FFFAFA'; // ダークモードか通常モードの背景色
       
-      // ダークモードの場合、画像に暗さフィルターを適用
-      if (darkMode) {
-        img.style.filter = 'brightness(0.8)';
+      // 背景画像の追加（もし存在すれば）
+      if (backgroundImage) {
+        const imgContainer = document.createElement('div');
+        imgContainer.style.position = 'absolute';
+        imgContainer.style.top = `${redAreaTop}px`;
+        imgContainer.style.left = '0';
+        imgContainer.style.width = '100%';
+        imgContainer.style.height = `${redAreaHeight}px`;
+        imgContainer.style.overflow = 'hidden';
+        
+        const img = document.createElement('img');
+        img.src = backgroundImage;
+        img.style.width = '100%';
+        img.style.height = '100%';
+        img.style.objectFit = 'cover';
+        img.style.objectPosition = 'center';
+        
+        // ダークモードの場合、画像に暗さフィルターを適用
+        if (darkMode) {
+          img.style.filter = 'brightness(0.8)';
+        }
+        
+        imgContainer.appendChild(img);
+        tempContainer.appendChild(imgContainer);
       }
       
-      imgContainer.appendChild(img);
-      tempContainer.appendChild(imgContainer);
+      // 上部テキスト - ダークモード考慮
+      const upperTextElement = document.createElement('div');
+      upperTextElement.style.position = 'absolute';
+      upperTextElement.style.top = `${upperTextTop * (baseWidth / 360)}px`;
+      upperTextElement.style.left = '0';
+      upperTextElement.style.width = '100%';
+      upperTextElement.style.textAlign = 'center';
+      upperTextElement.style.padding = '0';
+      const originalUpperSize = parseInt(getComputedStyle(textContainerRef.current.querySelector('.upper-text')).fontSize);
+      const scaledUpperSize = originalUpperSize * (baseWidth / 360);
+      upperTextElement.style.fontSize = `${scaledUpperSize}px`;
+      upperTextElement.style.lineHeight = lineHeight;
+      upperTextElement.style.fontFamily = selectedFont;
+      upperTextElement.style.fontWeight = fontWeight;
+      upperTextElement.style.whiteSpace = 'pre-line';
+      upperTextElement.style.zIndex = '2';
+      
+      // ダークモードではデフォルトテキスト色を白に設定
+      if (darkMode) {
+        upperTextElement.style.color = '#ffffff';
+      }
+      
+      upperTextElement.innerHTML = convertSimpleMarkupToHtml(markupUpperText, darkMode);
+      
+      // 下部テキスト - ダークモード考慮
+      const bottomTextElement = document.createElement('div');
+      bottomTextElement.style.position = 'absolute';
+      bottomTextElement.style.top = `calc(100% - ${bottomTextBottom * (baseWidth / 360)}px)`;
+      bottomTextElement.style.left = '0';
+      bottomTextElement.style.width = '100%';
+      bottomTextElement.style.textAlign = 'center';
+      bottomTextElement.style.padding = '0';
+      const originalBottomSize = parseInt(getComputedStyle(textContainerRef.current.querySelector('.bottom-text')).fontSize);
+      const scaledBottomSize = originalBottomSize * (baseWidth / 360);
+      bottomTextElement.style.fontSize = `${scaledBottomSize}px`;
+      bottomTextElement.style.lineHeight = lineHeight;
+      bottomTextElement.style.fontFamily = selectedFont;
+      bottomTextElement.style.fontWeight = fontWeight;
+      bottomTextElement.style.whiteSpace = 'pre-line';
+      bottomTextElement.style.zIndex = '2';
+      
+      // ダークモードではデフォルトテキスト色を白に設定
+      if (darkMode) {
+        bottomTextElement.style.color = '#ffffff';
+      }
+      
+      bottomTextElement.innerHTML = convertSimpleMarkupToHtml(markupBottomText, darkMode);
+      
+      // テキスト要素をコンテナに追加
+      tempContainer.appendChild(upperTextElement);
+      tempContainer.appendChild(bottomTextElement);
+      
+      // 一時コンテナをDOMに追加
+      document.body.appendChild(tempContainer);
+      
+      // html2canvasを使用してHTML要素をキャンバスに変換
+      const canvas = await html2canvas(tempContainer, {
+        backgroundColor: darkMode ? '#121212' : '#FFFAFA', // ダークモードか通常モードの背景色
+        width: baseWidth,
+        height: baseHeight,
+        scale: 1, // スケールは1に設定（既に適切なサイズにスケーリング済み）
+        useCORS: true, // 外部リソースの読み込み許可
+        logging: false // ログ出力を無効化
+      });
+      
+      // 一時コンテナを削除
+      document.body.removeChild(tempContainer);
+      
+      // Canvas要素からデータURLを生成
+      const dataUrl = canvas.toDataURL('image/png');
+      
+      // ダウンロードリンク作成
+      const link = document.createElement('a');
+      const mode = darkMode ? 'dark' : 'light';
+      link.download = `text_image_${mode}_${timestamp}.png`;
+      link.href = dataUrl;
+      link.click();
+      
+    } catch (error) {
+      console.error("画像の保存に失敗しました:", error);
+      alert("画像の保存に失敗しました: " + (error ? error.toString() : "不明なエラー"));
+    } finally {
+      setIsProcessing(false);
     }
-    
-    // 上部テキスト - ダークモード考慮
-    const upperTextElement = document.createElement('div');
-    upperTextElement.style.position = 'absolute';
-    upperTextElement.style.top = `${upperTextTop * (baseWidth / 360)}px`;
-    upperTextElement.style.left = '0';
-    upperTextElement.style.width = '100%';
-    upperTextElement.style.textAlign = 'center';
-    upperTextElement.style.padding = '0';
-    const originalUpperSize = parseInt(getComputedStyle(textContainerRef.current.querySelector('.upper-text')).fontSize);
-    const scaledUpperSize = originalUpperSize * (baseWidth / 360);
-    upperTextElement.style.fontSize = `${scaledUpperSize}px`;
-    upperTextElement.style.lineHeight = lineHeight;
-    upperTextElement.style.fontFamily = selectedFont;
-    upperTextElement.style.fontWeight = fontWeight;
-    upperTextElement.style.whiteSpace = 'pre-line';
-    upperTextElement.style.zIndex = '2';
-    upperTextElement.innerHTML = convertSimpleMarkupToHtml(markupUpperText, darkMode);
-    
-    // 下部テキスト - ダークモード考慮
-    const bottomTextElement = document.createElement('div');
-    bottomTextElement.style.position = 'absolute';
-    bottomTextElement.style.top = `calc(100% - ${bottomTextBottom * (baseWidth / 360)}px)`;
-    bottomTextElement.style.left = '0';
-    bottomTextElement.style.width = '100%';
-    bottomTextElement.style.textAlign = 'center';
-    bottomTextElement.style.padding = '0';
-    const originalBottomSize = parseInt(getComputedStyle(textContainerRef.current.querySelector('.bottom-text')).fontSize);
-    const scaledBottomSize = originalBottomSize * (baseWidth / 360);
-    bottomTextElement.style.fontSize = `${scaledBottomSize}px`;
-    bottomTextElement.style.lineHeight = lineHeight;
-    bottomTextElement.style.fontFamily = selectedFont;
-    bottomTextElement.style.fontWeight = fontWeight;
-    bottomTextElement.style.whiteSpace = 'pre-line';
-    bottomTextElement.style.zIndex = '2';
-    bottomTextElement.innerHTML = convertSimpleMarkupToHtml(markupBottomText, darkMode);
-    
-    // テキスト要素をコンテナに追加
-    tempContainer.appendChild(upperTextElement);
-    tempContainer.appendChild(bottomTextElement);
-    
-    // 一時コンテナをDOMに追加
-    document.body.appendChild(tempContainer);
-    
-    // html2canvasを使用してHTML要素をキャンバスに変換
-    const canvas = await html2canvas(tempContainer, {
-      backgroundColor: darkMode ? '#121212' : '#FFFAFA', // ダークモードか通常モードの背景色
-      width: baseWidth,
-      height: baseHeight,
-      scale: 1, // スケールは1に設定（既に適切なサイズにスケーリング済み）
-      useCORS: true, // 外部リソースの読み込み許可
-      logging: false // ログ出力を無効化
-    });
-    
-    // 一時コンテナを削除
-    document.body.removeChild(tempContainer);
-    
-    // Canvas要素からデータURLを生成
-    const dataUrl = canvas.toDataURL('image/png');
-    
-    // ダウンロードリンク作成
-    const link = document.createElement('a');
-    const mode = darkMode ? 'dark' : 'light';
-    link.download = `text_image_${mode}_${timestamp}.png`;
-    link.href = dataUrl;
-    link.click();
-    
-  } catch (error) {
-    console.error("画像の保存に失敗しました:", error);
-    alert("画像の保存に失敗しました: " + (error ? error.toString() : "不明なエラー"));
-  } finally {
-    setIsProcessing(false);
-  }
-};
-
+  };
 
 
 
@@ -767,7 +737,7 @@ const saveAsImage = async (darkMode = false) => {
 
           {/* 保存ボタン */}
           <div className="flex flex-wrap gap-2">
-      <button 
+          <button 
         onClick={() => saveAsImage(false)}
         className="p-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-blue-300 flex-1"
         disabled={isProcessing}
