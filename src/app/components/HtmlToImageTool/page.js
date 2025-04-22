@@ -16,8 +16,11 @@ export default function HtmlToImageTool() {
   const [upperTextTop, setUpperTextTop] = useState(60); // 上部テキストの位置
   const [bottomTextBottom, setBottomTextBottom] = useState(225); // 下部テキストの位置
   const [isProcessing, setIsProcessing] = useState(false);
+  const [backgroundImage, setBackgroundImage] = useState(null); // 背景画像
+  const [isDragging, setIsDragging] = useState(false); // ドラッグ状態の管理
   const previewRef = useRef(null);
   const textContainerRef = useRef(null); // テキスト要素のみを含むコンテナへの参照
+  const imageInputRef = useRef(null); // ファイル入力用の参照
   
   // 利用可能なフォントリスト
   const availableFonts = [
@@ -100,6 +103,53 @@ export default function HtmlToImageTool() {
   
   // スケールファクター
   const scaleFactor = 360/baseWidth;
+
+  // ドラッグ&ドロップ処理
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      const file = e.dataTransfer.files[0];
+      if (file.type.match('image.*')) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setBackgroundImage(e.target.result);
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+  };
+
+  // ファイル選択処理
+  const handleFileInput = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setBackgroundImage(e.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // 画像クリア
+  const clearImage = () => {
+    setBackgroundImage(null);
+    if (imageInputRef.current) {
+      imageInputRef.current.value = '';
+    }
+  };
   
   // HTML要素から画像を生成して保存 - html2canvasライブラリを使用
   const saveAsImage = async () => {
@@ -119,7 +169,30 @@ export default function HtmlToImageTool() {
       tempContainer.style.left = '-9999px';
       tempContainer.style.width = `${baseWidth}px`; // 出力サイズと同じ幅
       tempContainer.style.height = `${baseHeight}px`; // 出力サイズと同じ高さ
-      tempContainer.style.backgroundColor = 'transparent';
+      tempContainer.style.backgroundColor = '#FFFAFA'; // snow色の背景
+      
+      // 背景画像の追加（もし存在すれば）
+      if (backgroundImage) {
+        const imgContainer = document.createElement('div');
+        imgContainer.style.position = 'absolute';
+        imgContainer.style.top = `${redAreaTop}px`;
+        imgContainer.style.left = '0';
+        imgContainer.style.width = '100%';
+        imgContainer.style.height = `${redAreaHeight}px`;
+        imgContainer.style.overflow = 'hidden';
+        imgContainer.style.display = 'flex';
+        imgContainer.style.justifyContent = 'center';
+        imgContainer.style.alignItems = 'center';
+        
+        const img = document.createElement('img');
+        img.src = backgroundImage;
+        img.style.maxWidth = '100%';
+        img.style.maxHeight = '100%';
+        img.style.objectFit = 'contain';
+        
+        imgContainer.appendChild(img);
+        tempContainer.appendChild(imgContainer);
+      }
       
       // テキストコンテナのクローンを作成
       const clone = textContainerRef.current.cloneNode(true);
@@ -137,14 +210,14 @@ export default function HtmlToImageTool() {
       
       // 下部テキスト要素のフォントサイズを調整
       const bottomTextClone = clone.querySelector('.bottom-text');
-       if (bottomTextClone) {
-      const originalSize = parseInt(getComputedStyle(textContainerRef.current.querySelector('.bottom-text')).fontSize);
-      const scaledSize = originalSize * (baseWidth / 360); // プレビューから出力サイズへのスケール
-      bottomTextClone.style.fontSize = `${scaledSize}px`;
-      
-      // bottom から top への変更
-      bottomTextClone.style.top = `calc(100% - ${bottomTextBottom * (baseWidth / 360)}px)`;
-    }
+      if (bottomTextClone) {
+        const originalSize = parseInt(getComputedStyle(textContainerRef.current.querySelector('.bottom-text')).fontSize);
+        const scaledSize = originalSize * (baseWidth / 360); // プレビューから出力サイズへのスケール
+        bottomTextClone.style.fontSize = `${scaledSize}px`;
+        
+        // bottom から top への変更
+        bottomTextClone.style.top = `calc(100% - ${bottomTextBottom * (baseWidth / 360)}px)`;
+      }
       
       // クローンを一時コンテナに追加
       tempContainer.appendChild(clone);
@@ -152,7 +225,7 @@ export default function HtmlToImageTool() {
       
       // html2canvasを使用してHTML要素をキャンバスに変換
       const canvas = await html2canvas(tempContainer, {
-        backgroundColor: null, // 透明な背景
+        backgroundColor: '#FFFAFA', // snow色の背景
         width: baseWidth,
         height: baseHeight,
         scale: 1, // スケールは1に設定（既に適切なサイズにスケーリング済み）
@@ -186,7 +259,7 @@ export default function HtmlToImageTool() {
       <div 
         className="relative w-full h-full"
         style={{
-          backgroundColor: "white"
+          backgroundColor: "#FFFAFA" // snow色の背景
         }}
         ref={previewRef}
         id="preview-container"
@@ -215,7 +288,7 @@ export default function HtmlToImageTool() {
               fontFamily: selectedFont,
               fontWeight: fontWeight,
               whiteSpace: 'pre-line', // 明示的な改行のみを反映
-              zIndex: 1
+              zIndex: 2 // 背景画像より前に表示
             }}
             dangerouslySetInnerHTML={{ __html: upperHtml }}
           />
@@ -234,39 +307,66 @@ export default function HtmlToImageTool() {
               fontFamily: selectedFont,
               fontWeight: fontWeight,
               whiteSpace: 'pre-line', // 明示的な改行のみを反映
-              zIndex: 1
+              zIndex: 2 // 背景画像より前に表示
             }}
             dangerouslySetInnerHTML={{ __html: bottomHtml }}
           />
         </div>
         
-        {/* 中央の緑帯 - プレビュー用（テキストコンテナの外に配置） */}
+        {/* 中央の画像エリア */}
         <div 
-          className="green-area"
+          className={`image-drop-area ${isDragging ? 'border-dashed border-2 border-blue-400' : ''}`}
           style={{
             position: 'absolute',
             top: `${redAreaTop * scaleFactor}px`,
             left: "0",
             width: "100%",
             height: `${redAreaHeight * scaleFactor}px`,
-            backgroundColor: '#90EE90', // 薄い緑色
-            zIndex: 0
-          }} 
+            backgroundColor: backgroundImage ? 'transparent' : '#90EE90', // 画像がない場合は薄い緑色
+            zIndex: 1,
+            overflow: 'hidden',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            cursor: 'pointer'
+          }}
+          onClick={() => imageInputRef.current && imageInputRef.current.click()}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
         >
-          {/* 緑領域の中央に仮のテキスト */}
-          <div
-            style={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              color: 'white',
-              fontWeight: 'bold',
-              fontSize: '14px'
-            }}
-          >
-            ここに画像が入ります
-          </div>
+          {backgroundImage ? (
+            // 背景画像がある場合は表示
+            <img 
+              src={backgroundImage} 
+              alt="背景画像"
+              style={{
+                maxWidth: '100%',
+                maxHeight: '100%',
+                objectFit: 'contain'
+              }}
+            />
+          ) : (
+            // 背景画像がない場合はプレースホルダーテキスト
+            <div
+              style={{
+                color: 'white',
+                fontWeight: 'bold',
+                fontSize: '14px',
+                textAlign: 'center',
+                padding: '0 10px'
+              }}
+            >
+              ここに画像をドロップするか、クリックして選択
+            </div>
+          )}
+          <input 
+            type="file" 
+            ref={imageInputRef}
+            onChange={handleFileInput}
+            accept="image/*"
+            style={{ display: 'none' }}
+          />
         </div>
       </div>
     );
@@ -278,8 +378,8 @@ export default function HtmlToImageTool() {
   };
   
   return (
-    <div className="flex flex-row gap-4 p-4">
-      <div className="flex flex-col w-1/2 gap-4">
+    <div className="flex flex-col md:flex-row gap-4 p-4">
+      <div className="flex flex-col w-full md:w-1/2 gap-4">
         <textarea
           className="w-full h-48 p-2 border rounded"
           value={markupUpperText}
@@ -294,123 +394,144 @@ export default function HtmlToImageTool() {
         />
           
         <div className="flex flex-col gap-4">
-        <button
-    onClick={toggleSettings}
-    className="p-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
-  >
-    {showSettings ? '詳細設定を閉じる' : '詳細設定を開く'}
-  </button>
+          <button
+            onClick={toggleSettings}
+            className="p-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+          >
+            {showSettings ? '詳細設定を閉じる' : '詳細設定を開く'}
+          </button>
 
-  {/* 詳細設定パネル - showSettingsがtrueのときのみ表示 */}
-  {showSettings && (
-    <div className="flex flex-col gap-4 border p-3 rounded bg-gray-50">
-      {/* テキストサイズ調整 */}
-      <div>
-        <label className="mb-2 block">テキストサイズ倍率: {textRate.toFixed(1)}</label>
-        <input
-          type="range"
-          min="0.5"
-          max="5.0"
-          step="0.1"
-          value={textRate}
-          onChange={(e) => setTextRate(parseFloat(e.target.value))}
-          className="w-full"
-        />
-      </div>
-      
-      {/* 行間の調整 */}
-      <div>
-        <label className="mb-2 block">行間設定: {lineHeight.toFixed(1)}</label>
-        <input
-          type="range"
-          min="1.0"
-          max="2.5"
-          step="0.1"
-          value={lineHeight}
-          onChange={(e) => setLineHeight(parseFloat(e.target.value))}
-          className="w-full"
-        />
-      </div>
-      
-      {/* 上部テキスト位置の調整 */}
-      <div>
-        <label className="mb-2 block">上部テキスト位置: {upperTextTop}px</label>
-        <input
-          type="range"
-          min="20"
-          max="200"
-          step="5"
-          value={upperTextTop}
-          onChange={(e) => setUpperTextTop(parseInt(e.target.value))}
-          className="w-full"
-        />
-      </div>
-      
-      {/* 下部テキスト位置の調整 */}
-      <div>
-        <label className="mb-2 block">下部テキスト位置: {bottomTextBottom}px</label>
-        <input
-          type="range"
-          min="50"
-          max="400"
-          step="5"
-          value={bottomTextBottom}
-          onChange={(e) => setBottomTextBottom(parseInt(e.target.value))}
-          className="w-full"
-        />
-      </div>
-      
-      {/* フォントウェイト選択 */}
-      <div className="my-2">
-        <label className="block mb-2 font-medium">フォントの太さ:</label>
-        <div className="flex flex-wrap gap-2">
-          {[100, 200, 300, 400, 500, 600, 700, 800, 900].map((weight) => (
-            <button
-              key={weight}
-              onClick={() => setFontWeight(weight)}
-              className={`px-3 py-1 border rounded ${
-                fontWeight === weight 
-                  ? 'bg-blue-500 text-white' 
-                  : 'bg-white text-gray-700 hover:bg-gray-100'
-              }`}
-              style={{ fontWeight: weight }}
-            >
-              {weight === 400 ? '標準' : 
-               weight < 400 ? '細' + (400 - weight) / 100 : 
-               '太' + (weight - 400) / 100}
-            </button>
-          ))}
-        </div>
-      </div>
-      
-      {/* フォント選択 */}
-      <div className="my-2">
-        <label className="block mb-2 font-medium">フォント選択:</label>
-        <div className="grid grid-cols-2 gap-2">
-          {availableFonts.map((font) => (
-            <div key={font.id} className="flex items-center">
-              <input
-                type="radio"
-                id={`font-${font.id}`}
-                name="font-selector"
-                value={font.id}
-                checked={selectedFont === font.id}
-                onChange={() => setSelectedFont(font.id)}
-                className="mr-2"
-              />
-              <label 
-                htmlFor={`font-${font.id}`}
-                style={{ fontFamily: font.id, fontWeight: fontWeight }}
-                className="cursor-pointer"
-              >
-                {font.name}
-              </label>
+          {/* 詳細設定パネル - showSettingsがtrueのときのみ表示 */}
+          {showSettings && (
+            <div className="flex flex-col gap-4 border p-3 rounded bg-gray-50">
+              {/* テキストサイズ調整 */}
+              <div>
+                <label className="mb-2 block">テキストサイズ倍率: {textRate.toFixed(1)}</label>
+                <input
+                  type="range"
+                  min="0.5"
+                  max="5.0"
+                  step="0.1"
+                  value={textRate}
+                  onChange={(e) => setTextRate(parseFloat(e.target.value))}
+                  className="w-full"
+                />
+              </div>
+              
+              {/* 行間の調整 */}
+              <div>
+                <label className="mb-2 block">行間設定: {lineHeight.toFixed(1)}</label>
+                <input
+                  type="range"
+                  min="1.0"
+                  max="2.5"
+                  step="0.1"
+                  value={lineHeight}
+                  onChange={(e) => setLineHeight(parseFloat(e.target.value))}
+                  className="w-full"
+                />
+              </div>
+              
+              {/* 上部テキスト位置の調整 */}
+              <div>
+                <label className="mb-2 block">上部テキスト位置: {upperTextTop}px</label>
+                <input
+                  type="range"
+                  min="20"
+                  max="200"
+                  step="5"
+                  value={upperTextTop}
+                  onChange={(e) => setUpperTextTop(parseInt(e.target.value))}
+                  className="w-full"
+                />
+              </div>
+              
+              {/* 下部テキスト位置の調整 */}
+              <div>
+                <label className="mb-2 block">下部テキスト位置: {bottomTextBottom}px</label>
+                <input
+                  type="range"
+                  min="50"
+                  max="400"
+                  step="5"
+                  value={bottomTextBottom}
+                  onChange={(e) => setBottomTextBottom(parseInt(e.target.value))}
+                  className="w-full"
+                />
+              </div>
+              
+              {/* フォントウェイト選択 */}
+              <div className="my-2">
+                <label className="block mb-2 font-medium">フォントの太さ:</label>
+                <div className="flex flex-wrap gap-2">
+                  {[100, 200, 300, 400, 500, 600, 700, 800, 900].map((weight) => (
+                    <button
+                      key={weight}
+                      onClick={() => setFontWeight(weight)}
+                      className={`px-3 py-1 border rounded ${
+                        fontWeight === weight 
+                          ? 'bg-blue-500 text-white' 
+                          : 'bg-white text-gray-700 hover:bg-gray-100'
+                      }`}
+                      style={{ fontWeight: weight }}
+                    >
+                      {weight === 400 ? '標準' : 
+                      weight < 400 ? '細' + (400 - weight) / 100 : 
+                      '太' + (weight - 400) / 100}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              {/* フォント選択 */}
+              <div className="my-2">
+                <label className="block mb-2 font-medium">フォント選択:</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {availableFonts.map((font) => (
+                    <div key={font.id} className="flex items-center">
+                      <input
+                        type="radio"
+                        id={`font-${font.id}`}
+                        name="font-selector"
+                        value={font.id}
+                        checked={selectedFont === font.id}
+                        onChange={() => setSelectedFont(font.id)}
+                        className="mr-2"
+                      />
+                      <label 
+                        htmlFor={`font-${font.id}`}
+                        style={{ fontFamily: font.id, fontWeight: fontWeight }}
+                        className="cursor-pointer"
+                      >
+                        {font.name}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* 背景画像管理 */}
+              <div className="my-2">
+                <label className="block mb-2 font-medium">背景画像:</label>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => imageInputRef.current && imageInputRef.current.click()}
+                    className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600"
+                  >
+                    画像を選択
+                  </button>
+                  <button
+                    onClick={clearImage}
+                    className={`px-3 py-1 rounded ${backgroundImage ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
+                    disabled={!backgroundImage}
+                  >
+                    画像をクリア
+                  </button>
+                </div>
+              </div>
             </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  )}
+          )}
+
           {/* 保存ボタン */}
           <button 
             onClick={saveAsImage}
@@ -421,15 +542,16 @@ export default function HtmlToImageTool() {
           </button>
         </div>
       </div>
-      <div className="w-1/2 flex items-center justify-center">
+      <div className="w-full md:w-1/2 flex items-center justify-center mt-4 md:mt-0">
         <div
-          className="border rounded bg-white overflow-hidden"
+          className="border rounded overflow-hidden"
           style={{ 
             width: "360px", 
             height: "640px", 
             maxWidth: "100%", 
             aspectRatio: "9 / 16", 
-            position: "relative" 
+            position: "relative",
+            backgroundColor: "#FFFAFA" // snow色の背景
           }}
         >
           <MobilArea textRate={textRate} />
