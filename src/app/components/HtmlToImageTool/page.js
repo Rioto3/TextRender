@@ -18,9 +18,21 @@ export default function HtmlToImageTool() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [backgroundImage, setBackgroundImage] = useState(null); // 背景画像
   const [isDragging, setIsDragging] = useState(false); // ドラッグ状態の管理
+  
+  // テキスト選択関連の状態
+  const [selectedTextInfo, setSelectedTextInfo] = useState({
+    isActive: false,
+    text: '',
+    target: null, // 'upper' または 'bottom'
+    start: 0,
+    end: 0
+  });
+  
   const previewRef = useRef(null);
   const textContainerRef = useRef(null); // テキスト要素のみを含むコンテナへの参照
   const imageInputRef = useRef(null); // ファイル入力用の参照
+  const upperTextRef = useRef(null); // 上部テキストエリアへの参照
+  const bottomTextRef = useRef(null); // 下部テキストエリアへの参照
   
   // 利用可能なフォントリスト
   const availableFonts = [
@@ -32,6 +44,18 @@ export default function HtmlToImageTool() {
     { id: "yuji-syuku", name: "游字様" },
     { id: "rampart-one", name: "ランパートワン" }
   ];
+  
+  // カラーマップ（色名と色コード）
+  const colorMap = {
+    red: "#ff0000",
+    orange: "#ffa500",
+    yellow: "#ffff00",
+    green: "#008000",
+    blue: "#1e90ff",
+    purple: "#800080",
+    white: "#ffffff",
+    black: "#000000"
+  };
   
   // フォントのロード
   useEffect(() => {
@@ -70,17 +94,85 @@ export default function HtmlToImageTool() {
     };
   }, []);
   
-  const colorMap = {
-    red: "#ff0000",
-    orange: "#ffa500",
-    yellow: "#ffff00",
-    green: "#008000",
-    blue: "#1e90ff",
-    purple: "#800080",
-    white: "#ffffff",
-    black: "#000000"
+  // テキスト選択イベントハンドラ
+  const handleTextSelect = (event, target) => {
+    const textarea = event.target;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = textarea.value.substring(start, end);
+    
+    if (start !== end) {
+      setSelectedTextInfo({
+        isActive: true,
+        text: selectedText,
+        target,
+        start,
+        end
+      });
+    } else {
+      // 選択範囲がない場合
+      setSelectedTextInfo({
+        isActive: false,
+        text: '',
+        target: null,
+        start: 0,
+        end: 0
+      });
+    }
   };
   
+  // カラータグを挿入する関数
+  const insertColorTag = (color) => {
+    if (!selectedTextInfo.isActive) return;
+    
+    const { target, start, end, text } = selectedTextInfo;
+    const taggedText = `<${color}>${text}</${color}>`;
+    
+    if (target === 'upper') {
+      const newText = 
+        markupUpperText.substring(0, start) + 
+        taggedText + 
+        markupUpperText.substring(end);
+      
+      setMarkupUpperText(newText);
+      
+      // カーソル位置を保持するための処理
+      setTimeout(() => {
+        if (upperTextRef.current) {
+          upperTextRef.current.focus();
+          const newCursorPos = start + taggedText.length;
+          upperTextRef.current.setSelectionRange(newCursorPos, newCursorPos);
+        }
+      }, 0);
+    } else if (target === 'bottom') {
+      const newText = 
+        markupBottomText.substring(0, start) + 
+        taggedText + 
+        markupBottomText.substring(end);
+      
+      setMarkupBottomText(newText);
+      
+      // カーソル位置を保持するための処理
+      setTimeout(() => {
+        if (bottomTextRef.current) {
+          bottomTextRef.current.focus();
+          const newCursorPos = start + taggedText.length;
+          bottomTextRef.current.setSelectionRange(newCursorPos, newCursorPos);
+        }
+      }, 0);
+    }
+    
+    // 選択状態をリセット
+    setSelectedTextInfo({
+      isActive: false,
+      text: '',
+      target: null,
+      start: 0,
+      end: 0
+    });
+  };
+  
+  // HTML生成用の関数
   const convertSimpleMarkupToHtml = (text) => {
     const withColors = text.replace(/<([a-z]+)>(.*?)<\/\1>/g, (match, color, content) => {
       const htmlColor = colorMap[color.toLowerCase()] || "#000";
@@ -377,21 +469,61 @@ export default function HtmlToImageTool() {
     setShowSettings(!showSettings);
   };
   
+  // カラーピッカーコンポーネント
+  const ColorPicker = ({ show }) => {
+    if (!show) return null;
+    
+    return (
+      <div className="flex flex-wrap gap-1 mt-1 mb-2 p-1 border rounded bg-gray-100">
+        <div className="w-full text-xs text-gray-600 mb-1">テキストに適用する色:</div>
+        {Object.keys(colorMap).map(color => (
+          <button
+            key={color}
+            onClick={() => insertColorTag(color)}
+            className="w-8 h-8 rounded border"
+            style={{ 
+              backgroundColor: colorMap[color],
+              color: ['white', 'yellow'].includes(color) ? 'black' : 'white',
+              fontSize: '9px',
+              boxShadow: '0 1px 2px rgba(0,0,0,0.2)'
+            }}
+            title={`${color}色を適用`}
+          >
+            {color.substring(0, 1).toUpperCase()}
+          </button>
+        ))}
+      </div>
+    );
+  };
+  
   return (
     <div className="flex flex-col md:flex-row gap-4 p-4">
       <div className="flex flex-col w-full md:w-1/2 gap-4">
-        <textarea
-          className="w-full h-48 p-2 border rounded"
-          value={markupUpperText}
-          onChange={(e) => setMarkupUpperText(e.target.value)}
-          placeholder="上部テキストを入力（<color>タグで色指定可能）"
-        />
-        <textarea
-          className="w-full h-48 p-2 border rounded"
-          value={markupBottomText}
-          onChange={(e) => setMarkupBottomText(e.target.value)}
-          placeholder="下部テキストを入力（<color>タグで色指定可能）"
-        />
+        <div>
+          <label className="block mb-1 font-medium">上部テキスト:</label>
+          <textarea
+            ref={upperTextRef}
+            className="w-full h-36 p-2 border rounded font-mono"
+            value={markupUpperText}
+            onChange={(e) => setMarkupUpperText(e.target.value)}
+            onSelect={(e) => handleTextSelect(e, 'upper')}
+            placeholder="上部テキストを入力（<color>タグで色指定可能）"
+          />
+          <ColorPicker show={selectedTextInfo.isActive && selectedTextInfo.target === 'upper'} />
+        </div>
+        
+        <div>
+          <label className="block mb-1 font-medium">下部テキスト:</label>
+          <textarea
+            ref={bottomTextRef}
+            className="w-full h-36 p-2 border rounded font-mono"
+            value={markupBottomText}
+            onChange={(e) => setMarkupBottomText(e.target.value)}
+            onSelect={(e) => handleTextSelect(e, 'bottom')}
+            placeholder="下部テキストを入力（<color>タグで色指定可能）"
+          />
+          <ColorPicker show={selectedTextInfo.isActive && selectedTextInfo.target === 'bottom'} />
+        </div>
           
         <div className="flex flex-col gap-4">
           <button
@@ -530,6 +662,16 @@ export default function HtmlToImageTool() {
                 </div>
                 <div className="mt-2 text-sm text-gray-600">
                   <p>※画像は表示エリアいっぱいに拡大されます</p>
+                </div>
+              </div>
+              
+              {/* カラータグ説明 */}
+              <div className="my-2">
+                <label className="block mb-2 font-medium">カラータグの使い方:</label>
+                <div className="p-2 bg-gray-100 rounded text-sm">
+                  <p>テキストを選択すると色ボタンが表示されます。色ボタンをクリックすると選択テキストに自動的にカラータグが適用されます。</p>
+                  <p className="mt-1">対応色: {Object.keys(colorMap).join(', ')}</p>
+                  <p className="mt-1">例: <code>&lt;red&gt;赤色テキスト&lt;/red&gt;</code></p>
                 </div>
               </div>
             </div>
