@@ -180,15 +180,13 @@ export default function HtmlToImageTool() {
         imgContainer.style.width = '100%';
         imgContainer.style.height = `${redAreaHeight}px`;
         imgContainer.style.overflow = 'hidden';
-        imgContainer.style.display = 'flex';
-        imgContainer.style.justifyContent = 'center';
-        imgContainer.style.alignItems = 'center';
         
         const img = document.createElement('img');
         img.src = backgroundImage;
-        img.style.maxWidth = '100%';
-        img.style.maxHeight = '100%';
-        img.style.objectFit = 'contain';
+        img.style.width = '100%';
+        img.style.height = '100%';
+        img.style.objectFit = 'cover';
+        img.style.objectPosition = 'center';
         
         imgContainer.appendChild(img);
         tempContainer.appendChild(imgContainer);
@@ -325,9 +323,6 @@ export default function HtmlToImageTool() {
             backgroundColor: backgroundImage ? 'transparent' : '#90EE90', // 画像がない場合は薄い緑色
             zIndex: 1,
             overflow: 'hidden',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
             cursor: 'pointer'
           }}
           onClick={() => imageInputRef.current && imageInputRef.current.click()}
@@ -341,15 +336,20 @@ export default function HtmlToImageTool() {
               src={backgroundImage} 
               alt="背景画像"
               style={{
-                maxWidth: '100%',
-                maxHeight: '100%',
-                objectFit: 'contain'
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                objectPosition: 'center'
               }}
             />
           ) : (
             // 背景画像がない場合はプレースホルダーテキスト
             <div
               style={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
                 color: 'white',
                 fontWeight: 'bold',
                 fontSize: '14px',
@@ -527,6 +527,9 @@ export default function HtmlToImageTool() {
                   >
                     画像をクリア
                   </button>
+                </div>
+                <div className="mt-2 text-sm text-gray-600">
+                  <p>※画像は表示エリアいっぱいに拡大されます</p>
                 </div>
               </div>
             </div>
