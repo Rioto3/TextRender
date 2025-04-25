@@ -18,6 +18,10 @@ export default function HtmlToImageTool() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [backgroundImage, setBackgroundImage] = useState(null); // 背景画像
   const [isDragging, setIsDragging] = useState(false); // ドラッグ状態の管理
+  const [imageUrl, setImageUrl] = useState(''); 
+
+
+  
   
   // テキスト選択関連の状態
   const [selectedTextInfo, setSelectedTextInfo] = useState({
@@ -527,6 +531,18 @@ const convertSimpleMarkupToHtml = (text, darkMode = false) => {
     setShowSettings(!showSettings);
   };
   
+  const loadImageFromUrl = () => {
+    if (imageUrl) {
+      // 有効なURLかチェック
+      try {
+        new URL(imageUrl);
+        setBackgroundImage(imageUrl);
+      } catch (e) {
+        alert('有効なURLを入力してください');
+      }
+    }
+  };
+  
   // カラーピッカーコンポーネント
   const ColorPicker = ({ show }) => {
     if (!show) return null;
@@ -718,6 +734,27 @@ const convertSimpleMarkupToHtml = (text, darkMode = false) => {
                     画像をクリア
                   </button>
                 </div>
+
+                      
+                <div className="mt-3">
+                  <label className="block mb-1 text-sm font-medium">画像URL:</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={imageUrl}
+                      onChange={(e) => setImageUrl(e.target.value)}
+                      placeholder="https://example.com/image.jpg"
+                      className="flex-grow p-2 border rounded text-sm"
+                    />
+                    <button
+                      onClick={loadImageFromUrl}
+                      className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
+                    >
+                      読み込み
+                    </button>
+                  </div>
+                </div>
+                      
                 <div className="mt-2 text-sm text-gray-600">
                   <p>※画像は表示エリアいっぱいに拡大されます</p>
                 </div>
