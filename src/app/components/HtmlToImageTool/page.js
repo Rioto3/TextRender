@@ -400,132 +400,166 @@ const convertSimpleMarkupToHtml = (text, darkMode = false) => {
 
 
 
+const MobilArea = ({ textRate = 1 }) => {
+  return (
+    <div 
+      className="relative w-full h-full"
+      style={{
+        backgroundColor: "#FFFAFA" // snow色の背景
+      }}
+      ref={previewRef}
+      id="preview-container"
+    >
+      {/* テキスト要素のみを含むコンテナ（透明背景） */}
+      <div 
+        ref={textContainerRef}
+        className="absolute top-0 left-0 w-full h-full"
+        style={{
+          backgroundColor: "transparent",
+          overflow: "hidden"
+        }}
+        id="text-container"
+      >
+        {/* 上部テキスト - 絶対配置 */}
+        <div
+          className="text-center upper-text"
+          style={{
+            position: "absolute",
+            top: `${upperTextTop}px`,
+            left: "0",
+            width: "100%",
+            padding: '0',
+            fontSize: `${24 * scaleFactor * textRate}px`,
+            lineHeight: lineHeight,
+            fontFamily: selectedFont,
+            fontWeight: fontWeight,
+            whiteSpace: 'pre-line', // 明示的な改行のみを反映
+            zIndex: 2 // 背景画像より前に表示
+          }}
+          dangerouslySetInnerHTML={{ __html: upperHtml }}
+        />
+        
+        {/* 下部テキスト - 絶対配置 */}
+        <div
+          className="text-center bottom-text"
+          style={{
+            position: "absolute",
+            top: `calc(100% - ${bottomTextBottom}px)`, 
+            left: "0",
+            width: "100%",
+            padding: '0',
+            fontSize: `${24 * scaleFactor * textRate}px`,
+            lineHeight: lineHeight,
+            fontFamily: selectedFont,
+            fontWeight: fontWeight,
+            whiteSpace: 'pre-line', // 明示的な改行のみを反映
+            zIndex: 2 // 背景画像より前に表示
+          }}
+          dangerouslySetInnerHTML={{ __html: bottomHtml }}
+        />
+      </div>
+      
+      {/* 中央の画像エリア */}
+      <div 
+        className={`image-drop-area ${isDragging ? 'border-dashed border-2 border-blue-400' : ''}`}
+        style={{
+          position: 'absolute',
+          top: `${redAreaTop * scaleFactor}px`,
+          left: "0",
+          width: "100%",
+          height: `${redAreaHeight * scaleFactor}px`,
+          backgroundColor: backgroundImage ? 'transparent' : '#00A651', // より濃い緑色
+          zIndex: 1,
+          overflow: 'hidden'
+        }}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+      >
+        {backgroundImage ? (
+          // 背景画像がある場合は表示
+          <img 
+            src={backgroundImage} 
+            alt="背景画像"
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              objectPosition: 'center'
+            }}
+          />
+        ) : (
+          // 背景画像がない場合はURL入力フィールドとプレースホルダーテキスト
+          <div
+            style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: '90%',
+              textAlign: 'center'
+            }}
+          >
+            <div className="flex gap-2 mb-3">
+              <input
+                type="text"
+                value={imageUrl}
+                onChange={(e) => setImageUrl(e.target.value)}
+                placeholder="画像URLを入力..."
+                className="flex-grow p-2 border rounded text-sm bg-white"
+                onClick={(e) => e.stopPropagation()}
+              />
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  loadImageFromUrl();
+                }}
+                className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
+              >
+                適用
+              </button>
+            </div>
+            <div className="text-white font-bold">
+              ここに画像をドロップするか、クリックして選択
+            </div>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                imageInputRef.current && imageInputRef.current.click();
+              }}
+              className="mt-3 px-3 py-1 bg-white text-green-700 rounded hover:bg-gray-100 text-sm"
+            >
+              画像を選択
+            </button>
+          </div>
+        )}
+        <input 
+          type="file" 
+          ref={imageInputRef}
+          onChange={handleFileInput}
+          accept="image/*"
+          style={{ display: 'none' }}
+        />
+      </div>
+    </div>
+  );
+};
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 
   
-  // モバイルエリアコンポーネント
-  const MobilArea = ({ textRate = 1 }) => {
-    return (
-      <div 
-        className="relative w-full h-full"
-        style={{
-          backgroundColor: "#FFFAFA" // snow色の背景
-        }}
-        ref={previewRef}
-        id="preview-container"
-      >
-        {/* テキスト要素のみを含むコンテナ（透明背景） */}
-        <div 
-          ref={textContainerRef}
-          className="absolute top-0 left-0 w-full h-full"
-          style={{
-            backgroundColor: "transparent",
-            overflow: "hidden"
-          }}
-          id="text-container"
-        >
-          {/* 上部テキスト - 絶対配置 */}
-          <div
-            className="text-center upper-text"
-            style={{
-              position: "absolute",
-              top: `${upperTextTop}px`,
-              left: "0",
-              width: "100%",
-              padding: '0',
-              fontSize: `${24 * scaleFactor * textRate}px`,
-              lineHeight: lineHeight,
-              fontFamily: selectedFont,
-              fontWeight: fontWeight,
-              whiteSpace: 'pre-line', // 明示的な改行のみを反映
-              zIndex: 2 // 背景画像より前に表示
-            }}
-            dangerouslySetInnerHTML={{ __html: upperHtml }}
-          />
-          
-          {/* 下部テキスト - 絶対配置 */}
-          <div
-            className="text-center bottom-text"
-            style={{
-              position: "absolute",
-              top: `calc(100% - ${bottomTextBottom}px)`, 
-              left: "0",
-              width: "100%",
-              padding: '0',
-              fontSize: `${24 * scaleFactor * textRate}px`,
-              lineHeight: lineHeight,
-              fontFamily: selectedFont,
-              fontWeight: fontWeight,
-              whiteSpace: 'pre-line', // 明示的な改行のみを反映
-              zIndex: 2 // 背景画像より前に表示
-            }}
-            dangerouslySetInnerHTML={{ __html: bottomHtml }}
-          />
-        </div>
-        
-        {/* 中央の画像エリア */}
-        <div 
-          className={`image-drop-area ${isDragging ? 'border-dashed border-2 border-blue-400' : ''}`}
-          style={{
-            position: 'absolute',
-            top: `${redAreaTop * scaleFactor}px`,
-            left: "0",
-            width: "100%",
-            height: `${redAreaHeight * scaleFactor}px`,
-            backgroundColor: backgroundImage ? 'transparent' : '#90EE90', // 画像がない場合は薄い緑色
-            zIndex: 1,
-            overflow: 'hidden',
-            cursor: 'pointer'
-          }}
-          onClick={() => imageInputRef.current && imageInputRef.current.click()}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-        >
-          {backgroundImage ? (
-            // 背景画像がある場合は表示
-            <img 
-              src={backgroundImage} 
-              alt="背景画像"
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-                objectPosition: 'center'
-              }}
-            />
-          ) : (
-            // 背景画像がない場合はプレースホルダーテキスト
-            <div
-              style={{
-                position: 'absolute',
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
-                color: 'white',
-                fontWeight: 'bold',
-                fontSize: '14px',
-                textAlign: 'center',
-                padding: '0 10px'
-              }}
-            >
-              ここに画像をドロップするか、クリックして選択
-            </div>
-          )}
-          <input 
-            type="file" 
-            ref={imageInputRef}
-            onChange={handleFileInput}
-            accept="image/*"
-            style={{ display: 'none' }}
-          />
-        </div>
-      </div>
-    );
-  };
-
   // 設定パネル表示切り替え関数
   const toggleSettings = () => {
     setShowSettings(!showSettings);
@@ -796,21 +830,25 @@ const convertSimpleMarkupToHtml = (text, darkMode = false) => {
     </div>
         </div>
       </div>
-      <div className="w-full md:w-1/2 flex items-center justify-center mt-4 md:mt-0">
-        <div
-          className="border rounded overflow-hidden"
-          style={{ 
-            width: "360px", 
-            height: "640px", 
-            maxWidth: "100%", 
-            aspectRatio: "9 / 16", 
-            position: "relative",
-            backgroundColor: "#FFFAFA" // snow色の背景
-          }}
-        >
-          <MobilArea textRate={textRate} />
-        </div>
-      </div>
+
+<div className="w-full md:w-1/2 flex flex-col items-center justify-center mt-4 md:mt-0">
+
+  
+  {/* プレビューエリア */}
+  <div
+    className="border rounded overflow-hidden"
+    style={{ 
+      width: "360px", 
+      height: "640px", 
+      maxWidth: "100%", 
+      aspectRatio: "9 / 16", 
+      position: "relative",
+      backgroundColor: "#FFFAFA"
+    }}
+  >
+    <MobilArea textRate={textRate} />
+  </div>
+</div>
     </div>
   );
 }
