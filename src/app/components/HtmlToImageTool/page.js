@@ -801,9 +801,14 @@ const convertSimpleMarkupToHtml = (text, darkMode = false) => {
     </div>
         </div>
       </div>
-      <div className="w-full md:w-1/2 flex items-center justify-center mt-4 md:mt-0">
 
-　  {/* URL入力欄 - プレビューの上に配置 */}
+
+
+
+        
+// プレビューエリア直下にURL入力欄を追加（右側カラム内）
+<div className="w-full md:w-1/2 flex flex-col items-center justify-center mt-4 md:mt-0">
+  {/* URL入力欄 - プレビューの上に配置 */}
   <div className="w-full mb-3">
     <div className="flex gap-2">
       <input
@@ -821,22 +826,22 @@ const convertSimpleMarkupToHtml = (text, darkMode = false) => {
       </button>
     </div>
   </div>
-
-        
-        <div
-          className="border rounded overflow-hidden"
-          style={{ 
-            width: "360px", 
-            height: "640px", 
-            maxWidth: "100%", 
-            aspectRatio: "9 / 16", 
-            position: "relative",
-            backgroundColor: "#FFFAFA" // snow色の背景
-          }}
-        >
-          <MobilArea textRate={textRate} />
-        </div>
-      </div>
+  
+  {/* プレビューエリア */}
+  <div
+    className="border rounded overflow-hidden"
+    style={{ 
+      width: "360px", 
+      height: "640px", 
+      maxWidth: "100%", 
+      aspectRatio: "9 / 16", 
+      position: "relative",
+      backgroundColor: "#FFFAFA"
+    }}
+  >
+    <MobilArea textRate={textRate} />
+  </div>
+</div>
     </div>
   );
 }
