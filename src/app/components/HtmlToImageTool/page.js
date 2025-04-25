@@ -460,87 +460,100 @@ const MobilArea = ({ textRate = 1 }) => {
       </div>
       
       {/* 中央の画像エリア */}
-      <div 
-        className={`image-drop-area ${isDragging ? 'border-dashed border-2 border-blue-400' : ''}`}
-        style={{
-          position: 'absolute',
-          top: `${redAreaTop * scaleFactor}px`,
-          left: "0",
-          width: "100%",
-          height: `${redAreaHeight * scaleFactor}px`,
-          backgroundColor: backgroundImage ? 'transparent' : '#00A651', // より濃い緑色
-          zIndex: 1,
-          overflow: 'hidden'
+
+
+
+
+
+
+<div 
+  className={`image-drop-area ${isDragging ? 'border-dashed border-2 border-blue-400' : ''}`}
+  style={{
+    position: 'absolute',
+    top: `${redAreaTop * scaleFactor}px`,
+    left: "0",
+    width: "100%",
+    height: `${redAreaHeight * scaleFactor}px`,
+    backgroundColor: backgroundImage ? 'transparent' : '#00A651',
+    zIndex: 1,
+    overflow: 'hidden'
+  }}
+  onDragOver={handleDragOver}
+  onDragLeave={handleDragLeave}
+  onDrop={handleDrop}
+>
+  {/* 背景画像があれば表示（低いz-index） */}
+  {backgroundImage && (
+    <img 
+      src={backgroundImage} 
+      alt="背景画像"
+      style={{
+        width: '100%',
+        height: '100%',
+        objectFit: 'cover',
+        objectPosition: 'center',
+        position: 'absolute',
+        zIndex: 1
+      }}
+    />
+  )}
+  
+  {/* 入力UI（常に表示、高いz-index） */}
+  <div
+    style={{
+      position: 'absolute',
+      top: '50%',
+      left: '50%',
+      transform: 'translate(-50%, -50%)',
+      width: '90%',
+      textAlign: 'center',
+      zIndex: 2,
+      backgroundColor: backgroundImage ? 'rgba(0,0,0,0.5)' : 'transparent',
+      padding: backgroundImage ? '10px' : '0',
+      borderRadius: '5px'
+    }}
+  >
+    <div className="flex gap-2 mb-3">
+      <input
+        type="text"
+        value={imageUrl}
+        onChange={(e) => setImageUrl(e.target.value)}
+        placeholder="画像URLを入力..."
+        className="flex-grow p-2 border rounded text-sm bg-white"
+        onClick={(e) => e.stopPropagation()}
+      />
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          loadImageFromUrl();
         }}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
+        className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
       >
-        {backgroundImage ? (
-          // 背景画像がある場合は表示
-          <img 
-            src={backgroundImage} 
-            alt="背景画像"
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              objectPosition: 'center'
-            }}
-          />
-        ) : (
-          // 背景画像がない場合はURL入力フィールドとプレースホルダーテキスト
-          <div
-            style={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              width: '90%',
-              textAlign: 'center'
-            }}
-          >
-            <div className="flex gap-2 mb-3">
-              <input
-                type="text"
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
-                placeholder="画像URLを入力..."
-                className="flex-grow p-2 border rounded text-sm bg-white"
-                onClick={(e) => e.stopPropagation()}
-              />
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  loadImageFromUrl();
-                }}
-                className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
-              >
-                適用
-              </button>
-            </div>
-            <div className="text-white font-bold">
-              ここに画像をドロップするか、クリックして選択
-            </div>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                imageInputRef.current && imageInputRef.current.click();
-              }}
-              className="mt-3 px-3 py-1 bg-white text-green-700 rounded hover:bg-gray-100 text-sm"
-            >
-              画像を選択
-            </button>
-          </div>
-        )}
-        <input 
-          type="file" 
-          ref={imageInputRef}
-          onChange={handleFileInput}
-          accept="image/*"
-          style={{ display: 'none' }}
-        />
-      </div>
+        適用
+      </button>
+    </div>
+    <div className="text-white font-bold">
+      ここに画像をドロップするか、クリックして選択
+    </div>
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        imageInputRef.current && imageInputRef.current.click();
+      }}
+      className="mt-3 px-3 py-1 bg-white text-green-700 rounded hover:bg-gray-100 text-sm"
+    >
+      画像を選択
+    </button>
+  </div>
+  
+  <input 
+    type="file" 
+    ref={imageInputRef}
+    onChange={handleFileInput}
+    accept="image/*"
+    style={{ display: 'none' }}
+  />
+</div>
     </div>
   );
 };
