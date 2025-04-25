@@ -831,30 +831,8 @@ const MobilArea = ({ textRate = 1 }) => {
         </div>
       </div>
 
-
-
-
-        
-// プレビューエリア直下にURL入力欄を追加（右側カラム内）
 <div className="w-full md:w-1/2 flex flex-col items-center justify-center mt-4 md:mt-0">
-  {/* URL入力欄 - プレビューの上に配置 */}
-  <div className="w-full mb-3">
-    <div className="flex gap-2">
-      <input
-        type="text"
-        value={imageUrl}
-        onChange={(e) => setImageUrl(e.target.value)}
-        placeholder="画像URLを入力..."
-        className="flex-grow p-2 border rounded text-sm"
-      />
-      <button
-        onClick={loadImageFromUrl}
-        className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
-      >
-        URLから読込
-      </button>
-    </div>
-  </div>
+
   
   {/* プレビューエリア */}
   <div
