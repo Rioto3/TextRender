@@ -474,7 +474,7 @@ const convertSimpleMarkupToHtml = (text, darkMode = false) => {
             left: "0",
             width: "100%",
             height: `${redAreaHeight * scaleFactor}px`,
-            backgroundColor: backgroundImage ? 'transparent' : '#90EE90', // 画像がない場合は薄い緑色
+            backgroundColor: backgroundImage ? 'transparent' : '#4CAF50', // 画像がない場合は薄い緑色
             zIndex: 1,
             overflow: 'hidden',
             cursor: 'pointer'
@@ -484,6 +484,11 @@ const convertSimpleMarkupToHtml = (text, darkMode = false) => {
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
         >
+
+
+
+
+            
           {backgroundImage ? (
             // 背景画像がある場合は表示
             <img 
@@ -797,6 +802,27 @@ const convertSimpleMarkupToHtml = (text, darkMode = false) => {
         </div>
       </div>
       <div className="w-full md:w-1/2 flex items-center justify-center mt-4 md:mt-0">
+
+　  {/* URL入力欄 - プレビューの上に配置 */}
+  <div className="w-full mb-3">
+    <div className="flex gap-2">
+      <input
+        type="text"
+        value={imageUrl}
+        onChange={(e) => setImageUrl(e.target.value)}
+        placeholder="画像URLを入力..."
+        className="flex-grow p-2 border rounded text-sm"
+      />
+      <button
+        onClick={loadImageFromUrl}
+        className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
+      >
+        URLから読込
+      </button>
+    </div>
+  </div>
+
+        
         <div
           className="border rounded overflow-hidden"
           style={{ 
