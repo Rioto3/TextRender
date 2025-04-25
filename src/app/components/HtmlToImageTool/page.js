@@ -549,6 +549,66 @@ const MobilArea = ({ textRate = 1 }) => {
     >
       画像を選択
     </button>
+
+
+
+
+
+
+
+
+          {/* 保存ボタン */}
+          <div className="flex flex-wrap gap-2">
+          <button 
+        onClick={() => saveAsImage(false)}
+        className="p-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-blue-300 flex-1"
+        disabled={isProcessing}
+      >
+        {isProcessing ? '処理中...' : '通常モードで保存'}
+      </button>
+      
+      <button 
+        onClick={() => saveAsImage(true)}
+        className="p-2 bg-gray-800 text-white rounded hover:bg-gray-900 disabled:bg-gray-600 flex-1"
+        disabled={isProcessing}
+      >
+        {isProcessing ? '処理中...' : 'ダークモードで保存'}
+      </button>
+        
+    </div>
+
+        
+      <div className="flex flex-wrap gap-2 mt-3">
+  <button 
+    onClick={clearAllText}
+    className="p-2 bg-red-500 text-white rounded hover:bg-red-600 flex-1"
+  >
+    テキストをクリア
+  </button>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
   </div>
   
   <input 
@@ -824,32 +884,15 @@ const MobilArea = ({ textRate = 1 }) => {
             </div>
           )}
 
-          {/* 保存ボタン */}
-          <div className="flex flex-wrap gap-2">
-          <button 
-        onClick={() => saveAsImage(false)}
-        className="p-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-blue-300 flex-1"
-        disabled={isProcessing}
-      >
-        {isProcessing ? '処理中...' : '通常モードで保存'}
-      </button>
+
+
+
+
+
+
+
+
       
-      <button 
-        onClick={() => saveAsImage(true)}
-        className="p-2 bg-gray-800 text-white rounded hover:bg-gray-900 disabled:bg-gray-600 flex-1"
-        disabled={isProcessing}
-      >
-        {isProcessing ? '処理中...' : 'ダークモードで保存'}
-      </button>
-    </div>
-      <div className="flex flex-wrap gap-2 mt-3">
-  <button 
-    onClick={clearAllText}
-    className="p-2 bg-red-500 text-white rounded hover:bg-red-600 flex-1"
-  >
-    テキストをクリア
-  </button>
-</div>
     
     <div className="text-sm text-gray-600">
       <p>※ダークモード保存時は背景が暗くなり、白色テキストは黒色に変換されます</p>
