@@ -264,11 +264,6 @@ const convertSimpleMarkupToHtml = (text, darkMode = false) => {
       imageInputRef.current.value = '';
     }
   };
-
-  const clearAllText = () => {
-  setMarkupUpperText('');
-  setMarkupBottomText('');
-};
   
   const saveAsImage = async (darkMode = false) => {
     if (!textContainerRef.current || isProcessing) return;
@@ -403,226 +398,229 @@ const convertSimpleMarkupToHtml = (text, darkMode = false) => {
 
 
 
-
-
-const MobilArea = ({ textRate = 1 }) => {
-  return (
-    <div 
-      className="relative w-full h-full"
-      style={{
-        backgroundColor: "#FFFAFA" // snow色の背景
-      }}
-      ref={previewRef}
-      id="preview-container"
-    >
-      {/* テキスト要素のみを含むコンテナ（透明背景） */}
+  const MobilArea = ({ textRate = 1 }) => {
+    // Enter キーでの適用を処理するハンドラを追加
+    const handleImageUrlKeyPress = (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        loadImageFromUrl();
+        setImageUrl(''); // 適用後にURLフィールドをクリア
+      }
+    };
+  
+    // ロード関数のラッパー - URL入力フィールドをクリアする
+    const loadImageAndClear = () => {
+      loadImageFromUrl();
+      setImageUrl(''); // URL適用後にクリア
+    };
+  
+    // 両方のモードで保存する関数
+    const saveAsBothModes = async () => {
+      if (isProcessing) return;
+      await saveAsImage(false); // 通常モード保存
+      await saveAsImage(true);  // ダークモード保存
+    };
+  
+    return (
       <div 
-        ref={textContainerRef}
-        className="absolute top-0 left-0 w-full h-full"
+        className="relative w-full h-full"
         style={{
-          backgroundColor: "transparent",
-          overflow: "hidden"
+          backgroundColor: "#FFFAFA" // snow色の背景
         }}
-        id="text-container"
+        ref={previewRef}
+        id="preview-container"
       >
-        {/* 上部テキスト - 絶対配置 */}
-        <div
-          className="text-center upper-text"
+        {/* テキスト要素のみを含むコンテナ（透明背景） */}
+        <div 
+          ref={textContainerRef}
+          className="absolute top-0 left-0 w-full h-full"
           style={{
-            position: "absolute",
-            top: `${upperTextTop}px`,
-            left: "0",
-            width: "100%",
-            padding: '0',
-            fontSize: `${24 * scaleFactor * textRate}px`,
-            lineHeight: lineHeight,
-            fontFamily: selectedFont,
-            fontWeight: fontWeight,
-            whiteSpace: 'pre-line', // 明示的な改行のみを反映
-            zIndex: 2 // 背景画像より前に表示
+            backgroundColor: "transparent",
+            overflow: "hidden"
           }}
-          dangerouslySetInnerHTML={{ __html: upperHtml }}
-        />
+          id="text-container"
+        >
+          {/* 上部テキスト - 絶対配置 */}
+          <div
+            className="text-center upper-text"
+            style={{
+              position: "absolute",
+              top: `${upperTextTop}px`,
+              left: "0",
+              width: "100%",
+              padding: '0',
+              fontSize: `${24 * scaleFactor * textRate}px`,
+              lineHeight: lineHeight,
+              fontFamily: selectedFont,
+              fontWeight: fontWeight,
+              whiteSpace: 'pre-line',
+              zIndex: 2
+            }}
+            dangerouslySetInnerHTML={{ __html: upperHtml }}
+          />
+          
+          {/* 下部テキスト - 絶対配置 */}
+          <div
+            className="text-center bottom-text"
+            style={{
+              position: "absolute",
+              top: `calc(100% - ${bottomTextBottom}px)`, 
+              left: "0",
+              width: "100%",
+              padding: '0',
+              fontSize: `${24 * scaleFactor * textRate}px`,
+              lineHeight: lineHeight,
+              fontFamily: selectedFont,
+              fontWeight: fontWeight,
+              whiteSpace: 'pre-line',
+              zIndex: 2
+            }}
+            dangerouslySetInnerHTML={{ __html: bottomHtml }}
+          />
+        </div>
         
-        {/* 下部テキスト - 絶対配置 */}
-        <div
-          className="text-center bottom-text"
+        {/* 中央の画像エリア */}
+        <div 
+          className={`image-drop-area ${isDragging ? 'border-dashed border-2 border-blue-400' : ''}`}
           style={{
-            position: "absolute",
-            top: `calc(100% - ${bottomTextBottom}px)`, 
+            position: 'absolute',
+            top: `${redAreaTop * scaleFactor}px`,
             left: "0",
             width: "100%",
-            padding: '0',
-            fontSize: `${24 * scaleFactor * textRate}px`,
-            lineHeight: lineHeight,
-            fontFamily: selectedFont,
-            fontWeight: fontWeight,
-            whiteSpace: 'pre-line', // 明示的な改行のみを反映
-            zIndex: 2 // 背景画像より前に表示
+            height: `${redAreaHeight * scaleFactor}px`,
+            backgroundColor: backgroundImage ? 'transparent' : '#00A651',
+            zIndex: 1,
+            overflow: 'hidden'
           }}
-          dangerouslySetInnerHTML={{ __html: bottomHtml }}
-        />
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+        >
+          {/* 背景画像があれば表示（低いz-index） */}
+          {backgroundImage && (
+            <img 
+              src={backgroundImage} 
+              alt="背景画像"
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                objectPosition: 'center',
+                position: 'absolute',
+                zIndex: 1
+              }}
+            />
+          )}
+          
+          {/* 入力UI（常に表示、高いz-index） */}
+          <div
+            style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: '90%',
+              textAlign: 'center',
+              zIndex: 2,
+              backgroundColor: backgroundImage ? 'rgba(0,0,0,0.5)' : 'transparent',
+              padding: backgroundImage ? '10px' : '0',
+              borderRadius: '5px'
+            }}
+          >
+            <div className="flex gap-2 mb-3">
+              <input
+                type="text"
+                value={imageUrl}
+                onChange={(e) => setImageUrl(e.target.value)}
+                onKeyPress={handleImageUrlKeyPress} // Enterキーでの適用対応
+                placeholder="画像URLを入力... (Enterで適用)"
+                className="flex-grow p-2 border rounded text-sm bg-white"
+                onClick={(e) => e.stopPropagation()}
+              />
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  loadImageAndClear(); // クリア機能を追加
+                }}
+                className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
+              >
+                適用
+              </button>
+            </div>
+            <div className="text-white font-bold text-sm mb-2">
+              画像をドロップするか、URLを入力、または選択
+            </div>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                imageInputRef.current && imageInputRef.current.click();
+              }}
+              className="px-3 py-1 bg-white text-green-700 rounded hover:bg-gray-100 text-sm"
+            >
+              画像を選択
+            </button>
+  
+            {/* 保存ボタン - コンパクトなデザイン */}
+            <div className="flex flex-wrap gap-2 mt-4">
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  saveAsImage(false);
+                }}
+                className="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-blue-300 text-xs"
+                disabled={isProcessing}
+              >
+                {isProcessing ? '処理中...' : '通常保存'}
+              </button>
+              
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  saveAsImage(true);
+                }}
+                className="px-2 py-1 bg-gray-800 text-white rounded hover:bg-gray-900 disabled:bg-gray-600 text-xs"
+                disabled={isProcessing}
+              >
+                {isProcessing ? '処理中...' : 'ダーク保存'}
+              </button>
+              
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  saveAsBothModes();
+                }}
+                className="px-2 py-1 bg-purple-600 text-white rounded hover:bg-purple-700 disabled:bg-purple-400 text-xs"
+                disabled={isProcessing}
+              >
+                {isProcessing ? '処理中...' : '両方保存'}
+              </button>
+            </div>
+            
+            {/* テキストクリアボタン */}
+            <div className="mt-3">
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  clearAllText();
+                }}
+                className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-xs w-full"
+              >
+                テキストをクリア
+              </button>
+            </div>
+          </div>
+          
+          <input 
+            type="file" 
+            ref={imageInputRef}
+            onChange={handleFileInput}
+            accept="image/*"
+            style={{ display: 'none' }}
+          />
+        </div>
       </div>
-      
-      {/* 中央の画像エリア */}
-
-
-
-
-
-
-<div 
-  className={`image-drop-area ${isDragging ? 'border-dashed border-2 border-blue-400' : ''}`}
-  style={{
-    position: 'absolute',
-    top: `${redAreaTop * scaleFactor}px`,
-    left: "0",
-    width: "100%",
-    height: `${redAreaHeight * scaleFactor}px`,
-    backgroundColor: backgroundImage ? 'transparent' : '#00A651',
-    zIndex: 1,
-    overflow: 'hidden'
-  }}
-  onDragOver={handleDragOver}
-  onDragLeave={handleDragLeave}
-  onDrop={handleDrop}
->
-  {/* 背景画像があれば表示（低いz-index） */}
-  {backgroundImage && (
-    <img 
-      src={backgroundImage} 
-      alt="背景画像"
-      style={{
-        width: '100%',
-        height: '100%',
-        objectFit: 'cover',
-        objectPosition: 'center',
-        position: 'absolute',
-        zIndex: 1
-      }}
-    />
-  )}
-  
-  {/* 入力UI（常に表示、高いz-index） */}
-  <div
-    style={{
-      position: 'absolute',
-      top: '50%',
-      left: '50%',
-      transform: 'translate(-50%, -50%)',
-      width: '90%',
-      textAlign: 'center',
-      zIndex: 2,
-      backgroundColor: backgroundImage ? 'rgba(0,0,0,0.5)' : 'transparent',
-      padding: backgroundImage ? '10px' : '0',
-      borderRadius: '5px'
-    }}
-  >
-    <div className="flex gap-2 mb-3">
-      <input
-        type="text"
-        value={imageUrl}
-        onChange={(e) => setImageUrl(e.target.value)}
-        placeholder="画像URLを入力..."
-        className="flex-grow p-2 border rounded text-sm bg-white"
-        onClick={(e) => e.stopPropagation()}
-      />
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          loadImageFromUrl();
-        }}
-        className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
-      >
-        適用
-      </button>
-    </div>
-    <div className="text-white font-bold">
-      ここに画像をドロップするか、クリックして選択
-    </div>
-    <button
-      onClick={(e) => {
-        e.stopPropagation();
-        imageInputRef.current && imageInputRef.current.click();
-      }}
-      className="mt-3 px-3 py-1 bg-white text-green-700 rounded hover:bg-gray-100 text-sm"
-    >
-      画像を選択
-    </button>
-
-
-
-
-
-
-
-
-          {/* 保存ボタン */}
-          <div className="flex flex-wrap gap-2">
-          <button 
-        onClick={() => saveAsImage(false)}
-        className="p-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-blue-300 flex-1"
-        disabled={isProcessing}
-      >
-        {isProcessing ? '処理中...' : '通常モードで保存'}
-      </button>
-      
-      <button 
-        onClick={() => saveAsImage(true)}
-        className="p-2 bg-gray-800 text-white rounded hover:bg-gray-900 disabled:bg-gray-600 flex-1"
-        disabled={isProcessing}
-      >
-        {isProcessing ? '処理中...' : 'ダークモードで保存'}
-      </button>
-        
-    </div>
-
-        
-      <div className="flex flex-wrap gap-2 mt-3">
-  <button 
-    onClick={clearAllText}
-    className="p-2 bg-red-500 text-white rounded hover:bg-red-600 flex-1"
-  >
-    テキストをクリア
-  </button>
-</div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-  </div>
-  
-  <input 
-    type="file" 
-    ref={imageInputRef}
-    onChange={handleFileInput}
-    accept="image/*"
-    style={{ display: 'none' }}
-  />
-</div>
-    </div>
-  );
-};
-
+    );
+  };
 
 
 
@@ -884,15 +882,24 @@ const MobilArea = ({ textRate = 1 }) => {
             </div>
           )}
 
-
-
-
-
-
-
-
-
+          {/* 保存ボタン */}
+          <div className="flex flex-wrap gap-2">
+          <button 
+        onClick={() => saveAsImage(false)}
+        className="p-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-blue-300 flex-1"
+        disabled={isProcessing}
+      >
+        {isProcessing ? '処理中...' : '通常モードで保存'}
+      </button>
       
+      <button 
+        onClick={() => saveAsImage(true)}
+        className="p-2 bg-gray-800 text-white rounded hover:bg-gray-900 disabled:bg-gray-600 flex-1"
+        disabled={isProcessing}
+      >
+        {isProcessing ? '処理中...' : 'ダークモードで保存'}
+      </button>
+    </div>
     
     <div className="text-sm text-gray-600">
       <p>※ダークモード保存時は背景が暗くなり、白色テキストは黒色に変換されます</p>
