@@ -399,27 +399,7 @@ const convertSimpleMarkupToHtml = (text, darkMode = false) => {
 
 
   const MobilArea = ({ textRate = 1 }) => {
-    // Enter キーでの適用を処理するハンドラを追加
-    const handleImageUrlKeyPress = (e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        loadImageFromUrl();
-        setImageUrl(''); // 適用後にURLフィールドをクリア
-      }
-    };
-  
-    // ロード関数のラッパー - URL入力フィールドをクリアする
-    const loadImageAndClear = () => {
-      loadImageFromUrl();
-      setImageUrl(''); // URL適用後にクリア
-    };
-  
-    // 両方のモードで保存する関数
-    const saveAsBothModes = async () => {
-      if (isProcessing) return;
-      await saveAsImage(false); // 通常モード保存
-      await saveAsImage(true);  // ダークモード保存
-    };
+
   
     return (
       <div 
@@ -512,103 +492,6 @@ const convertSimpleMarkupToHtml = (text, darkMode = false) => {
             />
           )}
           
-          {/* 入力UI（常に表示、高いz-index） */}
-          <div
-            style={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              width: '90%',
-              textAlign: 'center',
-              zIndex: 2,
-              backgroundColor: backgroundImage ? 'rgba(0,0,0,0.5)' : 'transparent',
-              padding: backgroundImage ? '10px' : '0',
-              borderRadius: '5px'
-            }}
-          >
-            <div className="flex gap-2 mb-3">
-              <input
-                type="text"
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
-                onKeyPress={handleImageUrlKeyPress} // Enterキーでの適用対応
-                placeholder="画像URLを入力... (Enterで適用)"
-                className="flex-grow p-2 border rounded text-sm bg-white"
-                onClick={(e) => e.stopPropagation()}
-              />
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  loadImageAndClear(); // クリア機能を追加
-                }}
-                className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
-              >
-                適用
-              </button>
-            </div>
-            <div className="text-white font-bold text-sm mb-2">
-              画像をドロップするか、URLを入力、または選択
-            </div>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                imageInputRef.current && imageInputRef.current.click();
-              }}
-              className="px-3 py-1 bg-white text-green-700 rounded hover:bg-gray-100 text-sm"
-            >
-              画像を選択
-            </button>
-  
-            {/* 保存ボタン - コンパクトなデザイン */}
-            <div className="flex flex-wrap gap-2 mt-4">
-              <button 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  saveAsImage(false);
-                }}
-                className="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-blue-300 text-xs"
-                disabled={isProcessing}
-              >
-                {isProcessing ? '処理中...' : '通常保存'}
-              </button>
-              
-              <button 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  saveAsImage(true);
-                }}
-                className="px-2 py-1 bg-gray-800 text-white rounded hover:bg-gray-900 disabled:bg-gray-600 text-xs"
-                disabled={isProcessing}
-              >
-                {isProcessing ? '処理中...' : 'ダーク保存'}
-              </button>
-              
-              <button 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  saveAsBothModes();
-                }}
-                className="px-2 py-1 bg-purple-600 text-white rounded hover:bg-purple-700 disabled:bg-purple-400 text-xs"
-                disabled={isProcessing}
-              >
-                {isProcessing ? '処理中...' : '両方保存'}
-              </button>
-            </div>
-            
-            {/* テキストクリアボタン */}
-            <div className="mt-3">
-              <button 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  clearAllText();
-                }}
-                className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-xs w-full"
-              >
-                テキストをクリア
-              </button>
-            </div>
-          </div>
           
           <input 
             type="file" 
@@ -679,6 +562,36 @@ const convertSimpleMarkupToHtml = (text, darkMode = false) => {
       </div>
     );
   };
+
+
+
+      // Enter キーでの適用を処理するハンドラを追加
+      const handleImageUrlKeyPress = (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          loadImageFromUrl();
+          setImageUrl(''); // 適用後にURLフィールドをクリア
+        }
+      };
+    
+      // ロード関数のラッパー - URL入力フィールドをクリアする
+      const loadImageAndClear = () => {
+        loadImageFromUrl();
+        setImageUrl(''); // URL適用後にクリア
+      };
+    
+      // 両方のモードで保存する関数
+      const saveAsBothModes = async () => {
+        if (isProcessing) return;
+        await saveAsImage(false); // 通常モード保存
+        await saveAsImage(true);  // ダークモード保存
+      };
+
+      // clearAllText 関数の実装
+const clearAllText = () => {
+  setMarkupUpperText('');
+  setMarkupBottomText('');
+};
   
   return (
     <div className="flex flex-col md:flex-row gap-4 p-4">
@@ -695,9 +608,58 @@ const convertSimpleMarkupToHtml = (text, darkMode = false) => {
           />
           <ColorPicker show={selectedTextInfo.isActive && selectedTextInfo.target === 'upper'} />
         </div>
-        
+
+        <div id="work-area">
+
+
+            <div className="flex gap-2 mb-3">
+
+              
+         {/* テキストクリアボタン */}
+            <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  clearAllText();
+                }}
+                className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-xs "
+              >
+                 クリア
+              </button>
+
+              <input
+                type="text"
+                value={imageUrl}
+                onChange={(e) => setImageUrl(e.target.value)}
+                // onKeyPress={handleImageUrlKeyPress} // Enterキーでの適用対応
+                placeholder="画像URLを入力... (Enterで適用)"
+                className="flex-grow p-2 border rounded text-sm bg-white"
+                onClick={(e) => e.stopPropagation()}
+              />
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  loadImageAndClear(); // クリア機能を追加
+                }}
+                className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
+              >
+                適用
+              </button>
+
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  saveAsBothModes();
+                }}
+                className="px-2 py-1 bg-purple-600 text-white rounded hover:bg-purple-700 disabled:bg-purple-400 text-xs"
+                disabled={isProcessing}
+              >
+                {isProcessing ? '処理中...' : '両方保存'}
+              </button>
+            </div>
+
+        </div>
         <div>
-          <label className="block mb-1 font-medium">下部テキスト:</label>
+          
           <textarea
             ref={bottomTextRef}
             className="w-full h-36 p-2 border rounded font-mono"
@@ -707,6 +669,7 @@ const convertSimpleMarkupToHtml = (text, darkMode = false) => {
             placeholder="下部テキストを入力（<color>タグで色指定可能）"
           />
           <ColorPicker show={selectedTextInfo.isActive && selectedTextInfo.target === 'bottom'} />
+          <label className="block mb-1 font-medium">下部テキスト:</label>
         </div>
           
         <div className="flex flex-col gap-4">
