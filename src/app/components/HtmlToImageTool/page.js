@@ -468,7 +468,7 @@ const convertSimpleMarkupToHtml = (text, darkMode = false) => {
             left: "0",
             width: "100%",
             height: `${redAreaHeight * scaleFactor}px`,
-            backgroundColor: backgroundImage ? 'transparent' : '#00A651',
+            backgroundColor: backgroundImage ? 'transparent' : '#eaffd6',
             zIndex: 1,
             overflow: 'hidden'
           }}
@@ -621,8 +621,10 @@ const clearAllText = () => {
                   e.stopPropagation();
                   clearAllText();
                 }}
-                className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-xs "
+                className="px-2 py-1 bg-[#ffbcdd] text-white rounded hover:bg-red-600 text-xs "
               >
+
+                ffd6ea
                  クリア
               </button>
 
@@ -640,7 +642,7 @@ const clearAllText = () => {
                   e.stopPropagation();
                   loadImageAndClear(); // クリア機能を追加
                 }}
-                className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
+                className="px-3 py-1 bg-[#bddeff] text-white rounded hover:bg-blue-600 text-sm"
               >
                 適用
               </button>
@@ -650,7 +652,7 @@ const clearAllText = () => {
                   e.stopPropagation();
                   saveAsBothModes();
                 }}
-                className="px-2 py-1 bg-purple-600 text-white rounded hover:bg-purple-700 disabled:bg-purple-400 text-xs"
+                className="px-2 py-1 bg-[#d3bdff] text-white rounded hover:bg-purple-700 disabled:bg-purple-400 text-xs"
                 disabled={isProcessing}
               >
                 {isProcessing ? '処理中...' : '両方保存'}
@@ -673,6 +675,27 @@ const clearAllText = () => {
         </div>
           
         <div className="flex flex-col gap-4">
+
+
+          {/* 保存ボタン */}
+          <div className="flex flex-wrap gap-2">
+          <button 
+        onClick={() => saveAsImage(false)}
+        className="p-2 bg-[#bddeff] text-white rounded hover:bg-blue-600 disabled:bg-blue-300 flex-1"
+        disabled={isProcessing}
+      >
+        {isProcessing ? '処理中...' : '通常モードで保存'}
+      </button>
+      
+      <button 
+        onClick={() => saveAsImage(true)}
+        className="p-2 bg-[#999999] text-white rounded hover:bg-gray-900 disabled:bg-gray-600 flex-1"
+        disabled={isProcessing}
+      >
+        {isProcessing ? '処理中...' : 'ダークモードで保存'}
+      </button>
+    </div>
+
           <button
             onClick={toggleSettings}
             className="p-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
@@ -845,24 +868,7 @@ const clearAllText = () => {
             </div>
           )}
 
-          {/* 保存ボタン */}
-          <div className="flex flex-wrap gap-2">
-          <button 
-        onClick={() => saveAsImage(false)}
-        className="p-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-blue-300 flex-1"
-        disabled={isProcessing}
-      >
-        {isProcessing ? '処理中...' : '通常モードで保存'}
-      </button>
-      
-      <button 
-        onClick={() => saveAsImage(true)}
-        className="p-2 bg-gray-800 text-white rounded hover:bg-gray-900 disabled:bg-gray-600 flex-1"
-        disabled={isProcessing}
-      >
-        {isProcessing ? '処理中...' : 'ダークモードで保存'}
-      </button>
-    </div>
+
     
     <div className="text-sm text-gray-600">
       <p>※ダークモード保存時は背景が暗くなり、白色テキストは黒色に変換されます</p>
